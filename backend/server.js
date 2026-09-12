@@ -94,6 +94,10 @@ ConnectDB();
 const { verifySmtp } = require("./utils/emailService");
 verifySmtp();
 
+/* ── Standup digest cron (non-blocking) ───────────────────────*/
+const { startStandupDigest } = require("./utils/standupDigest");
+startStandupDigest();
+
 const { protect } = require("./middleware/authmiddleware");
 
 app.get("/", (req, res) => res.send("DevSpace API running ✓"));
@@ -149,6 +153,14 @@ app.use("/api/search", searchRoutes);
 /* ── Analytics ───────────────────────────────────────────────── */
 const analyticsRoutes = require("./routes/analyticsRoutes");
 app.use("/api/analytics", analyticsRoutes);
+
+/* ── Meetings ────────────────────────────────────────────────── */
+const meetingRoutes = require("./routes/meetingRoutes");
+app.use("/api/meetings", meetingRoutes);
+
+/* ── Standups ────────────────────────────────────────────────── */
+const standupRoutes = require("./routes/standupRoutes");
+app.use("/api/standup", standupRoutes);
 
 /* ── Global error handler ────────────────────────────────────── */
 app.use((err, req, res, next) => {

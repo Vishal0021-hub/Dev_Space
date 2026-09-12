@@ -13,6 +13,7 @@ import ChannelView from "./pages/ChannelView";
 import DMView      from "./pages/DMView";
 import Analytics   from "./pages/Analytics";
 import Settings    from "./pages/Settings";
+import MeetingNotes from "./pages/MeetingNotes";
 import { NotFound, Forbidden, OfflineBanner } from "./pages/ErrorPages";
 
 import CustomCursor  from "./components/CustomCursor";
@@ -87,6 +88,7 @@ function App() {
               <Route path="/channels/:channelId"   element={<ErrorBoundary><ChannelView /></ErrorBoundary>} />
               <Route path="/dm/:recipientId"       element={<ErrorBoundary><DMView /></ErrorBoundary>} />
               <Route path="/analytics/:workspaceId" element={<ErrorBoundary><Analytics /></ErrorBoundary>} />
+              <Route path="/meetings/:workspaceId"  element={<ErrorBoundary><MeetingNotes /></ErrorBoundary>} />
               <Route path="/settings"              element={<ErrorBoundary><Settings /></ErrorBoundary>} />
 
               {/* 404 fallback */}

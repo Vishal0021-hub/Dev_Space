@@ -25,14 +25,18 @@ const activitySchema = new mongoose.Schema(
         "member_joined",
         "role_changed",
         "project_created",
-        "comment_added"
+        "comment_added",
+        "meeting_created",
+        "meeting_deleted",
+        "standup_submitted",
+        "workspace_updated"
       ],
       required: true
     },
     // Spec fields: entityType + entityId
     entityType: {
       type: String,
-      enum: ["task", "project", "board", "channel", "workspace", "comment"],
+      enum: ["task", "project", "board", "channel", "workspace", "comment", "meeting", "standup"],
       default: null
     },
     entityId: {
