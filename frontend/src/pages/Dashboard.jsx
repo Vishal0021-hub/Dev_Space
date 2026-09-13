@@ -6,6 +6,8 @@ import { useWorkspace } from "../context/WorkspaceContext";
 import AppShell from "../components/AppShell";
 import NotificationBell from "../components/NotificationBell";
 import { DashboardSkeleton } from "../components/Skeletons";
+import StandupFeed from "../components/StandupFeed";
+import StandupHeatmap from "../components/StandupHeatmap";
 import "../utils/collab.css";
 
 /* ─── Icons ─────────────────────────────────────────────────── */
@@ -79,6 +81,9 @@ export default function Dashboard() {
   const [loading,       setLoading]       = useState(false);
   const [isModalOpen,   setIsModalOpen]   = useState(false);
   const [newWsName,     setNewWsName]     = useState("");
+
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUserId = currentUser?._id;
 
   /* Load dashboard when active workspace changes */
   useEffect(() => {
@@ -185,6 +190,19 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
+
+            {/* ── Daily Standup Feed ── */}
+            <StandupFeed
+              workspaceId={activeWorkspace._id}
+              currentUserId={currentUserId}
+            />
+
+            {/* ── Standup Heatmap ── */}
+            <StandupHeatmap
+              workspaceId={activeWorkspace._id}
+              members={dashboard?.members || []}
+              currentUserId={currentUserId}
+            />
 
             {/* ── Body: Activity + Members + Channels ── */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
