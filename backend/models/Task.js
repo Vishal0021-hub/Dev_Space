@@ -72,6 +72,17 @@ const taskSchema = new mongoose.Schema(
         author: String,
         fetchedAt: Date
       }
+    }],
+
+    /* ── Standup Blocker Flags ────────────────────────────────── */
+    flags: [{
+      type:       { type: String, enum: ['blocker'], default: 'blocker' },
+      reason:     { type: String },
+      reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      reportedAt: { type: Date, default: Date.now },
+      resolved:   { type: Boolean, default: false },
+      resolvedAt: { type: Date, default: null },
+      resolvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     }]
   },
   { timestamps: true }

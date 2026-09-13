@@ -431,3 +431,49 @@ exports.removeGithubLink = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+/* ── Resolve a blocker flag ──────────────────────────────────── */
+exports.resolveFlag = async (req, res) => {
+  try {
+    const { taskId, flagId } = req.params;
+    const task = await Task.findById(taskId);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    const flag = task.flags?.id(flagId);
+    if (!flag) return res.status(404).json({ message: "Flag not found" });
+
+    flag.resolved = true;
+    flag.resolvedAt = new Date();
+    flag.resolvedBy = req.user._id;
+    await task.save();
+
+    res.json({ message: "Flag resolved", task });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* ── Get All Tasks in Workspace ──────────────────────────────── */
+exports.getWorkspaceTasks = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const Project = require("../models/Project");
+    const Board = require("../models/Board");
+
+    const projects = await Project.find({ workspace: workspaceId }).select("_id");
+    const projectIds = projects.map((p) => p._id);
+
+    const boards = await Board.find({ project: { $in: projectIds } }).select("_id");
+    const boardIds = boards.map((b) => b._id);
+
+    const tasks = await Task.find({ board: { $in: boardIds } })
+      .populate("assignedTo", "name avatar")
+      .select("title status priority assignedTo board flags createdAt")
+      .sort({ updatedAt: -1 })
+      .limit(200);
+
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

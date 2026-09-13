@@ -88,6 +88,36 @@ const Board = () => {
   const [ghLoading, setGhLoading] = useState(false);
   const [ghError, setGhError] = useState("");
 
+  const [taskMeetings, setTaskMeetings] = useState([]);
+  const [loadingMeetings, setLoadingMeetings] = useState(false);
+
+  useEffect(() => {
+    if (modalTab === "meetings" && taskModal?.task?._id) {
+      setLoadingMeetings(true);
+      API.get(`/meetings/task/${taskModal.task._id}`)
+        .then((res) => setTaskMeetings(res.data || []))
+        .catch((err) => {
+          console.error("Failed to load meetings for task:", err);
+          setTaskMeetings([]);
+        })
+        .finally(() => setLoadingMeetings(false));
+    }
+  }, [modalTab, taskModal?.task?._id]);
+
+  const handleResolveFlag = async (flagId) => {
+    try {
+      const res = await API.patch(`/tasks/${taskModal.task._id}/flags/${flagId}/resolve`);
+      const updatedTask = res.data.task;
+      setTaskModal((m) => ({ ...m, task: updatedTask }));
+      setTasks((prev) =>
+        prev.map((t) => (normalizeId(t._id) === normalizeId(updatedTask._id) ? updatedTask : t))
+      );
+      toast.success("Blocker flag resolved!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to resolve flag");
+    }
+  };
+
   const handleAddPR = async (e) => {
     e.preventDefault();
     if (!ghUrl.trim()) return;
@@ -575,9 +605,28 @@ const Board = () => {
                                     >
                                       {/* Header: Priority + Actions */}
                                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                                           <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 20, background: pCfg.bg, color: pCfg.color, textTransform: "uppercase", letterSpacing: "0.08em" }}>{pCfg.label}</span>
                                           <span style={{ fontSize: 10, fontWeight: 600, color: statusStep.color }}>{statusStep.icon} {statusStep.label}</span>
+                                          {task.flags?.some(f => !f.resolved) && (
+                                            <span
+                                              style={{
+                                                fontSize: 9,
+                                                fontWeight: 700,
+                                                padding: "2px 7px",
+                                                borderRadius: 20,
+                                                background: "rgba(239,68,68,0.2)",
+                                                color: "#f87171",
+                                                border: "1px solid rgba(239,68,68,0.35)",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: 3,
+                                              }}
+                                              title={`Blocked: ${task.flags.filter(f => !f.resolved).map(f => f.reason).join("; ")}`}
+                                            >
+                                              🚩 Blocker
+                                            </span>
+                                          )}
                                         </div>
                                         <div style={{ display: "flex", gap: 2 }} onClick={e => e.stopPropagation()}>
                                           <button onClick={() => openEditTask(task)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 3, borderRadius: 5, transition: "color 0.15s" }}
@@ -754,6 +803,7 @@ const Board = () => {
                     { key: "details", label: "📋 Details" },
                     { key: "attachments", label: "📎 Attachments" },
                     { key: "github", label: "🐙 GitHub" },
+                    { key: "meetings", label: "📝 Meetings" },
                   ].map(tab => (
                     <button key={tab.key} type="button" onClick={() => setModalTab(tab.key)}
                       style={{
@@ -771,6 +821,39 @@ const Board = () => {
               {/* ── Details Tab (+ add mode) ── */}
               {(modalTab === "details" || taskModal.mode === "add") && (
                 <form onSubmit={submitTaskModal}>
+
+                  {/* Active Blocker Flags Banner (edit mode) */}
+                  {taskModal.mode === "edit" && taskModal.task?.flags?.filter(f => !f.resolved).length > 0 && (
+                    <div style={{ marginBottom: 20, padding: "12px 16px", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 12 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#f87171", display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                        <span>🚩 Active Blockers</span>
+                        <span style={{ fontSize: 10, background: "rgba(239,68,68,0.2)", padding: "1px 6px", borderRadius: 10 }}>
+                          {taskModal.task.flags.filter(f => !f.resolved).length}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {taskModal.task.flags.filter(f => !f.resolved).map(flag => (
+                          <div key={flag._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(0,0,0,0.25)", padding: "8px 12px", borderRadius: 8 }}>
+                            <div style={{ fontSize: 12, color: "#fca5a5", flex: 1, marginRight: 10 }}>
+                              {flag.reason || "Blocker reported in standup"}
+                              <span style={{ display: "block", fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                                Reported {flag.reportedAt ? new Date(flag.reportedAt).toLocaleDateString() : "recently"}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleResolveFlag(flag._id)}
+                              style={{ background: "#22c55e", border: "none", borderRadius: 6, padding: "4px 10px", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap" }}
+                              onMouseEnter={e => e.currentTarget.style.background = "#16a34a"}
+                              onMouseLeave={e => e.currentTarget.style.background = "#22c55e"}
+                            >
+                              ✓ Resolve
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Status Stepper — edit mode only */}
                   {taskModal.mode === "edit" && taskModal.task?._id && (
@@ -956,6 +1039,93 @@ const Board = () => {
                         </div>
                         {ghError && <div style={{ color: "#F87171", fontSize: 12, marginTop: 8 }}>{ghError}</div>}
                       </form>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Meetings Tab ── */}
+              {modalTab === "meetings" && taskModal.mode === "edit" && (
+                <div style={{ animation: "fadeIn 0.2s ease" }}>
+                  {loadingMeetings ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "16px 0" }}>
+                      {[1, 2].map((i) => (
+                        <div key={i} style={{ height: 72, background: "rgba(255,255,255,0.04)", borderRadius: 12, animation: "pulse 1.5s infinite" }} />
+                      ))}
+                    </div>
+                  ) : taskMeetings.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "40px 16px", background: "rgba(255,255,255,0.02)", borderRadius: 16, border: "1px dashed rgba(255,255,255,0.1)" }}>
+                      <div style={{ fontSize: 28, marginBottom: 10 }}>📝</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 6 }}>No meetings linked</div>
+                      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", maxWidth: 320, margin: "0 auto", lineHeight: 1.5 }}>
+                        This task hasn't been mentioned in any meeting notes yet. When you type <code style={{ color: "#818cf8", background: "rgba(99,102,241,0.1)", padding: "2px 5px", borderRadius: 4 }}>@task</code> in meeting notes, it will automatically link here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>
+                        Mentioned in {taskMeetings.length} {taskMeetings.length === 1 ? "meeting" : "meetings"}:
+                      </div>
+                      {taskMeetings.map((m) => (
+                        <div
+                          key={m._id}
+                          style={{
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 14,
+                            padding: "14px 16px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9", marginBottom: 4 }}>
+                              {m.title || "Untitled Meeting"}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+                              <span>📅 {new Date(m.date || m.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
+                              {m.createdBy?.name && (
+                                <span>👤 By {m.createdBy.name}</span>
+                              )}
+                              {m.attendees?.length > 0 && (
+                                <span>👥 {m.attendees.length} attendee{m.attendees.length > 1 ? "s" : ""}</span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const wsId = workspaceId || activeWorkspace?._id;
+                              setTaskModal(null);
+                              navigate(`/meetings/${wsId}?meetingId=${m._id}`);
+                            }}
+                            style={{
+                              background: "rgba(99,102,241,0.15)",
+                              color: "#a5b4fc",
+                              border: "1px solid rgba(99,102,241,0.3)",
+                              borderRadius: 8,
+                              padding: "6px 12px",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                              transition: "all 0.15s",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "#6366f1";
+                              e.currentTarget.style.color = "#fff";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "rgba(99,102,241,0.15)";
+                              e.currentTarget.style.color = "#a5b4fc";
+                            }}
+                          >
+                            Open Notes ↗
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

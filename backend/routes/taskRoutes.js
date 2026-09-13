@@ -13,13 +13,18 @@ const {
   removeDependency,
   getDependencies,
   addGithubLink,
-  removeGithubLink
+  removeGithubLink,
+  resolveFlag,
+  getWorkspaceTasks
 } = require("../controllers/taskController");
 
 const { protect } = require("../middleware/authmiddleware");
 const { isMember, isAdmin } = require("../middleware/roleMiddleware");
 
 // ── Specific prefix routes BEFORE generic /:id routes ──────────
+
+// Get all tasks in a workspace (for mentions, pickers, etc.)
+router.get("/workspace/:workspaceId", protect, isMember, getWorkspaceTasks);
 
 // Move task — has explicit /move/ prefix — safe before /:taskId
 router.put("/move/:taskId", protect, moveTask);
@@ -50,5 +55,8 @@ router.delete("/:taskId/dependencies/:depId", protect, isMember, removeDependenc
 /* ── GitHub Links (Read-Only) ─────────────────────────────────── */
 router.post("/:taskId/github-links", protect, isMember, addGithubLink);
 router.delete("/:taskId/github-links/:linkId", protect, isMember, removeGithubLink);
+
+/* ── Blocker Flags ────────────────────────────────────────────── */
+router.patch("/:taskId/flags/:flagId/resolve", protect, isMember, resolveFlag);
 
 module.exports = router;
