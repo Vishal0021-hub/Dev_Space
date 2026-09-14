@@ -136,7 +136,30 @@ export default function Analytics() {
               <StatCard label="Completed"     value={data.tasksByStatus.done}   color="#34d399" sub={`${pct}% completion rate`} />
               <StatCard label="In Progress"   value={data.tasksByStatus.inprogress} color="#fbbf24" />
               <StatCard label="Overdue"       value={data.overdueCount}         color="#f87171" sub="Past due date" />
+              <StatCard label="Standup Rate"  value={`${data.standup?.averageRate || 0}%`} color="#38bdf8" sub={`${data.standup?.totalSubmissions || 0} check-ins`} />
             </div>
+
+            {/* ── Standup Participation & Blockers Chart ── */}
+            <Section title="☀️ Daily Standup Participation & Impediments">
+              {!data.standup?.stats?.length ? (
+                <div style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", padding: "24px 0", fontSize: 13 }}>
+                  No standup entries submitted in this time range
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={data.standup.stats}>
+                    <CartesianGrid stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <YAxis yAxisId="rate" domain={[0, 100]} unit="%" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <YAxis yAxisId="count" orientation="right" allowDecimals={false} tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <Tooltip {...tooltipStyle} />
+                    <Legend wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }} />
+                    <Line yAxisId="rate" type="monotone" dataKey="participationRate" stroke="#38bdf8" strokeWidth={2.5} dot={{ fill: "#38bdf8", r: 3 }} name="Participation Rate (%)" />
+                    <Line yAxisId="count" type="monotone" dataKey="blockers" stroke="#f87171" strokeWidth={2} strokeDasharray="3 3" dot={{ fill: "#f87171", r: 3 }} name="Blockers Reported" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </Section>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
               {/* ── Completed Over Time ── */}

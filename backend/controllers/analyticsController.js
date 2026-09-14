@@ -195,6 +195,64 @@ exports.getAnalytics = async (req, res) => {
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
 
+    /* ── 7. Standup Participation Rate over time ─────────────── */
+    const StandupEntry = require("../models/StandupEntry");
+    const sinceStr = since.toISOString().slice(0, 10);
+    const totalMembersCount = workspace.members?.length || 1;
+
+    const standupStats = await StandupEntry.aggregate([
+      {
+        $match: {
+          workspaceId: new mongoose.Types.ObjectId(workspaceId),
+          date: { $gte: sinceStr },
+        },
+      },
+      {
+        $group: {
+          _id: "$date",
+          submittedCount: { $sum: 1 },
+          blockerCount: {
+            $sum: {
+              $cond: [{ $gt: [{ $size: { $ifNull: ["$blockers", []] } }, 0] }, 1, 0],
+            },
+          },
+        },
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: "$_id",
+          submitted: "$submittedCount",
+          blockers: "$blockerCount",
+          participationRate: {
+            $min: [
+              100,
+              {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ["$submittedCount", totalMembersCount] },
+                      100,
+                    ],
+                  },
+                  0,
+                ],
+              },
+            ],
+          },
+        },
+      },
+    ]);
+
+    const totalSubmissions = standupStats.reduce((acc, curr) => acc + curr.submitted, 0);
+    const averageRate = standupStats.length
+      ? Math.round(
+          standupStats.reduce((acc, curr) => acc + curr.participationRate, 0) /
+            standupStats.length
+        )
+      : 0;
+
     /* ── Summary ───────────────────────────────────────────── */
     res.json({
       range: rawRange,
@@ -206,6 +264,11 @@ exports.getAnalytics = async (req, res) => {
       overdueCount: overdueList.length,
       overdueList,
       topContributors,
+      standup: {
+        stats: standupStats,
+        averageRate,
+        totalSubmissions,
+      },
     });
   } catch (err) {
     console.error("[analytics]", err.message);
