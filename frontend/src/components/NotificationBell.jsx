@@ -44,7 +44,13 @@ export default function NotificationBell() {
   const panelRef = useRef(null);
 
   useEffect(() => {
-    fetchNotifications();
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    // Delay notification polling slightly so initial page data (workspaces/projects) has full priority
+    const timer = setTimeout(() => {
+      fetchNotifications();
+    }, 1200);
+    return () => clearTimeout(timer);
   }, []);
 
   // Close on outside click

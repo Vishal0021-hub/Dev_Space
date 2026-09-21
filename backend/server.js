@@ -55,32 +55,29 @@ const io = initSocket(httpServer);
 app.set("io", io);  // make io available to controllers via req.app.get("io")
 
 const { helmetMiddleware, generalLimiter, mongoSanitizeMiddleware, xssMiddleware, authLimiter, corsMiddleware } = require("./middleware/securityMiddleware");
-console.log({
-  helmetMiddleware,
-  generalLimiter,
-  mongoSanitizeMiddleware,
-  xssMiddleware,
-  authLimiter,
-  corsMiddleware
-});
 
-/* 1. helmet */
-app.use(helmetMiddleware);
-
-/* 2. rate-limit (general) */
-app.use("/api", generalLimiter);
-
-/* 3. hpp */
-app.use(hpp());
-
-/* 4. cors */
+/* 1. CORS — MUST be first so OPTIONS preflight requests return 204 immediately */
 app.use(corsMiddleware);
 
-/* 5. sanitizers (mongo + xss) */
+/* 2. Health check (instant response for uptime monitors / keep-alive pings) */
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
+});
+
+/* 3. helmet */
+app.use(helmetMiddleware);
+
+/* 4. rate-limit (general) */
+app.use("/api", generalLimiter);
+
+/* 5. hpp */
+app.use(hpp());
+
+/* 6. sanitizers (mongo + xss) */
 app.use(mongoSanitizeMiddleware);
 app.use(xssMiddleware);
 
-/* 6. express.json (Body parsers) */
+/* 7. express.json (Body parsers) */
 app.use(express.json({ limit: "10mb" }));
 
 /* 7. express.urlencoded */

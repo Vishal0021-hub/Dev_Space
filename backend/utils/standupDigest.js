@@ -3,21 +3,7 @@ const StandupConfig = require("../models/StandupConfig");
 const StandupEntry = require("../models/StandupEntry");
 const Workspace = require("../models/workspace");
 const User = require("../models/User");
-const nodemailer = require("nodemailer");
-
-/* ── Transporter (reuse same config as emailService) ─────────── */
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: parseInt(process.env.SMTP_PORT || "587"),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    tls: { rejectUnauthorized: false },
-  });
-}
+const { createTransporter } = require("./emailService");
 
 /* ── Build digest HTML ───────────────────────────────────────── */
 function buildDigestHtml(workspace, weekData) {

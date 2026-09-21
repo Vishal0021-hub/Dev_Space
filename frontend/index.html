@@ -6,13 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="DevSpace — the team collaboration platform for modern engineering teams." />
     <title>DevSpace</title>
-    <!-- Inter font — weights 400 / 500 / 600 / 700 / 800 -->
+    <!-- Google Fonts — preconnect to font origin -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Preload and load font stylesheet asynchronously to avoid render-blocking waterfalls -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Figtree:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Syne:wght@400;600;700;800&display=swap"
     />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Figtree:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Syne:wght@400;600;700;800&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Figtree:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Syne:wght@400;600;700;800&display=swap"
+      />
+    </noscript>
   </head>
   <body>
     <div id="root"></div>

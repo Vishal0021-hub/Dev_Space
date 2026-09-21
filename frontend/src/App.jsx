@@ -1,27 +1,32 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 
-import Login       from "./pages/Login";
-import Signup      from "./pages/Signup";
-import Dashboard   from "./pages/Dashboard";
-import Projects    from "./pages/Projects";
-import Board       from "./pages/Board";
-import Home        from "./pages/Home";
-import JoinPage    from "./pages/JoinPage";
-import ChannelView from "./pages/ChannelView";
-import DMView      from "./pages/DMView";
-import Analytics   from "./pages/Analytics";
-import Settings    from "./pages/Settings";
-import MeetingNotes from "./pages/MeetingNotes";
+// Error pages & static lightweight elements
 import { NotFound, Forbidden, OfflineBanner } from "./pages/ErrorPages";
-
 import CustomCursor  from "./components/CustomCursor";
 import ErrorBoundary from "./components/ErrorBoundary";
-import GlobalSearch  from "./components/GlobalSearch";
+import PageLoader    from "./components/PageLoader";
 
 import { WorkspaceProvider } from "./context/WorkspaceContext";
 import { SocketProvider }    from "./context/SocketContext";
+
+// Lazy-loaded routes for code splitting
+const Home         = lazy(() => import("./pages/Home"));
+const Login        = lazy(() => import("./pages/Login"));
+const Signup       = lazy(() => import("./pages/Signup"));
+const Dashboard    = lazy(() => import("./pages/Dashboard"));
+const Projects     = lazy(() => import("./pages/Projects"));
+const Board        = lazy(() => import("./pages/Board"));
+const JoinPage     = lazy(() => import("./pages/JoinPage"));
+const ChannelView  = lazy(() => import("./pages/ChannelView"));
+const DMView       = lazy(() => import("./pages/DMView"));
+const Analytics    = lazy(() => import("./pages/Analytics"));
+const Settings     = lazy(() => import("./pages/Settings"));
+const MeetingNotes = lazy(() => import("./pages/MeetingNotes"));
+
+// Lazy-loaded overlay modal
+const GlobalSearch = lazy(() => import("./components/GlobalSearch"));
 
 function App() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -66,34 +71,40 @@ function App() {
           <CustomCursor />
 
           {/* ── Global Search overlay (Cmd+K) ── */}
-          {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
+          {searchOpen && (
+            <Suspense fallback={null}>
+              <GlobalSearch onClose={() => setSearchOpen(false)} />
+            </Suspense>
+          )}
 
           {/* ── Routes ── */}
           <ErrorBoundary>
-            <Routes>
-              {/* Public */}
-              <Route path="/"            element={<Home/>} />
-              <Route path="/login"       element={<Login />} />
-              <Route path="/signup"      element={<Signup />} />
-              <Route path="/join/:token" element={<JoinPage />} />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public */}
+                <Route path="/"            element={<Home/>} />
+                <Route path="/login"       element={<Login />} />
+                <Route path="/signup"      element={<Signup />} />
+                <Route path="/join/:token" element={<JoinPage />} />
 
-              {/* Error pages */}
-              <Route path="/403" element={<Forbidden />} />
-              <Route path="/404" element={<NotFound />} />
+                {/* Error pages */}
+                <Route path="/403" element={<Forbidden />} />
+                <Route path="/404" element={<NotFound />} />
 
-              {/* App */}
-              <Route path="/dashboard"             element={<ErrorBoundary><Dashboard/></ErrorBoundary>} />
-              <Route path="/projects/:workspaceId" element={<ErrorBoundary><Projects /></ErrorBoundary>} />
-              <Route path="/boards/:projectId"     element={<ErrorBoundary><Board /></ErrorBoundary>} />
-              <Route path="/channels/:channelId"   element={<ErrorBoundary><ChannelView /></ErrorBoundary>} />
-              <Route path="/dm/:recipientId"       element={<ErrorBoundary><DMView /></ErrorBoundary>} />
-              <Route path="/analytics/:workspaceId" element={<ErrorBoundary><Analytics /></ErrorBoundary>} />
-              <Route path="/meetings/:workspaceId"  element={<ErrorBoundary><MeetingNotes /></ErrorBoundary>} />
-              <Route path="/settings"              element={<ErrorBoundary><Settings /></ErrorBoundary>} />
+                {/* App */}
+                <Route path="/dashboard"             element={<ErrorBoundary><Dashboard/></ErrorBoundary>} />
+                <Route path="/projects/:workspaceId" element={<ErrorBoundary><Projects /></ErrorBoundary>} />
+                <Route path="/boards/:projectId"     element={<ErrorBoundary><Board /></ErrorBoundary>} />
+                <Route path="/channels/:channelId"   element={<ErrorBoundary><ChannelView /></ErrorBoundary>} />
+                <Route path="/dm/:recipientId"       element={<ErrorBoundary><DMView /></ErrorBoundary>} />
+                <Route path="/analytics/:workspaceId" element={<ErrorBoundary><Analytics /></ErrorBoundary>} />
+                <Route path="/meetings/:workspaceId"  element={<ErrorBoundary><MeetingNotes /></ErrorBoundary>} />
+                <Route path="/settings"              element={<ErrorBoundary><Settings /></ErrorBoundary>} />
 
-              {/* 404 fallback */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* 404 fallback */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </ErrorBoundary>
         </WorkspaceProvider>
       </SocketProvider>

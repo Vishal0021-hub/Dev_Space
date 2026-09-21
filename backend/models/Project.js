@@ -19,4 +19,7 @@ const projectschema= new mongoose.Schema({
   { timestamps: true }
 );
 
+projectschema.index({ workspace: 1 });
+projectschema.index({ createdBy: 1 });
+
 module.exports = mongoose.models.Project || mongoose.model("Project", projectschema);

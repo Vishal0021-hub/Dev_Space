@@ -8,6 +8,7 @@ import NotificationBell from "../components/NotificationBell";
 import { DashboardSkeleton } from "../components/Skeletons";
 import StandupFeed from "../components/StandupFeed";
 import StandupHeatmap from "../components/StandupHeatmap";
+import { getStoredUser } from "../utils/auth";
 import "../utils/collab.css";
 
 /* ─── Icons ─────────────────────────────────────────────────── */
@@ -82,7 +83,7 @@ export default function Dashboard() {
   const [isModalOpen,   setIsModalOpen]   = useState(false);
   const [newWsName,     setNewWsName]     = useState("");
 
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUser = getStoredUser();
   const currentUserId = currentUser?._id;
 
   /* Load dashboard when active workspace changes */

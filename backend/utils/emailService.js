@@ -2,17 +2,32 @@ const nodemailer = require("nodemailer");
 
 /* ─── Transporter ──────────────────────────────────────────── */
 const createTransporter = () => {
+  const user = process.env.SMTP_USER;
+  const pass = (process.env.SMTP_PASS || "").replace(/\s+/g, ""); // Strip spaces from Google App Passwords
+
+  // If using Gmail, use nodemailer's built-in Gmail service (uses secure direct TLS on port 465, bypassing cloud port 587 blocks)
+  const isGmail = !process.env.SMTP_HOST || process.env.SMTP_HOST === "smtp.gmail.com" || (user && user.endsWith("@gmail.com"));
+
+  if (isGmail) {
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: { user, pass },
+      pool: true,
+      maxConnections: 3,
+      maxMessages: 50,
+    });
+  }
+
   return nodemailer.createTransport({
-    host:   process.env.SMTP_HOST || "smtp.gmail.com",
-    port:   parseInt(process.env.SMTP_PORT || "587"),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: parseInt(process.env.SMTP_PORT || "587") === 465,
+    auth: { user, pass },
     tls: { rejectUnauthorized: false },
   });
 };
+
+exports.createTransporter = createTransporter;
 
 const ROLE_DESCRIPTIONS = {
   owner:  "You'll have full control over the workspace including managing members and billing.",

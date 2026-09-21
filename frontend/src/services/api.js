@@ -3,7 +3,7 @@ import { toast } from "react-hot-toast";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  timeout: 15000,
+  timeout: 60000, // 60s timeout accommodates Render free-tier cold-start delays
 });
 
 /* ── Request interceptor: attach JWT ── */
@@ -16,14 +16,31 @@ API.interceptors.request.use(
   (err) => Promise.reject(err)
 );
 
-/* ── Response interceptor ── */
+/* ── Response interceptor with Render cold-start resilience ── */
 let _401shown = false;
 
 API.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
+    const config = err.config;
     const status = err.response?.status;
     const message = err.response?.data?.message;
+
+    // Auto-retry once on Render cold start (timeout or 502/503/504 gateway response)
+    const isColdStartError =
+      err.code === "ECONNABORTED" ||
+      !err.response ||
+      [502, 503, 504].includes(status);
+
+    if (config && config.method === "get" && !config._retry && isColdStartError) {
+      config._retry = true;
+      toast.loading("Server waking up (cold start) — retrying…", {
+        id: "cold-start-retry",
+        duration: 4000,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return API(config);
+    }
 
     // 401: session expired
     if (status === 401) {
@@ -66,9 +83,9 @@ API.interceptors.response.use(
       return Promise.reject(err);
     }
 
-    // Network/timeout errors — OfflineBanner handles visually
-    if (!err.response && err.code === "ECONNABORTED") {
-      toast.error("Request timed out — check your connection.", {
+    // Network/timeout errors
+    if (!err.response && (err.code === "ECONNABORTED" || err.message?.includes("timeout"))) {
+      toast.error("Request timed out. The server took too long to respond.", {
         id: "timeout", duration: 5000,
       });
     }

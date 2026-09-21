@@ -45,12 +45,39 @@ function markOffline(workspaceId, userId) {
 function initSocket(httpServer) {
   _io = new Server(httpServer, {
     cors: {
-      origin: [
-        process.env.CLIENT_URL,
-        process.env.SOCKET_CORS_ORIGIN,
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-      ].filter(Boolean),
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const allowed = [
+          process.env.CLIENT_URL,
+          process.env.FRONTEND_URL,
+          process.env.SOCKET_CORS_ORIGIN,
+          "http://localhost:5173",
+          "http://127.0.0.1:5173",
+        ]
+          .filter(Boolean)
+          .flatMap(u => u.split(","))
+          .map(s => s.trim().replace(/\/$/, ""));
+
+        const normalizedOrigin = origin.replace(/\/$/, "");
+        if (
+          allowed.includes(normalizedOrigin) ||
+          normalizedOrigin.includes("localhost") ||
+          normalizedOrigin.includes("127.0.0.1")
+        ) {
+          return callback(null, true);
+        }
+
+        try {
+          const parsed = new URL(origin);
+          if (parsed.hostname.endsWith(".onrender.com")) {
+            return callback(null, true);
+          }
+        } catch {
+          // invalid url
+        }
+
+        return callback(null, false);
+      },
       credentials: true,
     },
     pingTimeout: 60000,

@@ -16,6 +16,7 @@ import AttachmentPanel from "../components/AttachmentPanel";
 import { BoardSkeleton } from "../components/Skeletons";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { useSocket } from "../context/SocketContext";
+import { getStoredUserId } from "../utils/auth";
 
 /* ─── Icons ──────────────────────────────────────────────────── */
 const IconPlus = ({ size = 16 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
@@ -181,7 +182,7 @@ const Board = () => {
     try {
       const res = await API.get(`/workspaces/${wsId}/members`);
       setMembers(res.data);
-      const userId = JSON.parse(localStorage.getItem("user") || "{}")._id;
+      const userId = getStoredUserId();
       const m = res.data.find(
         m => m.userId?.toString() === userId || m.userId?._id?.toString() === userId
       );

@@ -44,23 +44,34 @@ exports.inviteToWorkspace = async (req, res) => {
     const { email, role } = req.body;
     const { workspaceId } = req.params;
 
+    const cleanEmail = (email || "").trim().toLowerCase();
+    if (!cleanEmail || !/^[a-zA-Z0-9._%+\-]+@gmail\.com$/i.test(cleanEmail)) {
+      return res.status(400).json({ message: "Please provide a valid Gmail address (@gmail.com)" });
+    }
+
     const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
     // Check if requester has permission (Owner or Admin)
-    const requester = workspace.members.find(m => m.userId.toString() === req.user._id.toString());
-    if (!requester || !["owner", "admin"].includes(requester.role)) {
+    const isOwner = workspace.owner && workspace.owner.toString() === req.user._id.toString();
+    const requester = workspace.members.find(m => {
+      const mId = m.userId?._id || m.userId;
+      return mId && mId.toString() === req.user._id.toString();
+    });
+    const hasPermission = isOwner || (requester && ["owner", "admin"].includes(requester.role));
+    if (!hasPermission) {
       return res.status(403).json({ message: "Only owners and admins can invite members" });
     }
 
     // Check if invited email is already a member
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
-      const alreadyMember = workspace.members.some(
-        m => m.userId && m.userId.toString() === existingUser._id.toString()
-      );
+      const alreadyMember = workspace.members.some(m => {
+        const mId = m.userId?._id || m.userId;
+        return mId && mId.toString() === existingUser._id.toString();
+      });
       if (alreadyMember) {
         return res.status(400).json({ message: "This user is already a member of the workspace" });
       }
@@ -70,21 +81,28 @@ exports.inviteToWorkspace = async (req, res) => {
 
     // Generate JWT invite token (embed email + workspace + role)
     const token = jwt.sign(
-      { workspaceId, email, role: inviteRole, type: "workspace_invite" },
+      { workspaceId, email: cleanEmail, role: inviteRole, type: "workspace_invite" },
       process.env.INVITE_SECRET || "invite_secret",
       { expiresIn: "7d" }
     );
 
-    // Build invite link
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    // Build invite link with automatic production domain fallback
+    const frontendUrl = (
+      process.env.FRONTEND_URL ||
+      process.env.CLIENT_URL ||
+      (process.env.NODE_ENV === "production"
+        ? "https://devspace-frontend-tx54.onrender.com"
+        : "http://localhost:5173")
+    ).replace(/\/$/, "");
     const inviteLink = `${frontendUrl}/join/${token}`;
 
     // Send invitation email (gracefully skip if SMTP not configured)
     let emailSent = false;
+    let emailErrorReason = null;
     const inviter = await User.findById(req.user._id);
     try {
       await sendInviteEmail({
-        toEmail: email,
+        toEmail: cleanEmail,
         inviterName: inviter?.name || "A team member",
         workspaceName: workspace.name,
         role: inviteRole,
@@ -93,18 +111,19 @@ exports.inviteToWorkspace = async (req, res) => {
       emailSent = true;
     } catch (emailErr) {
       console.error("[invite] Email send failed:", emailErr.message);
-      // Don't fail the whole invite — return the link even if email fails
+      emailErrorReason = emailErr.message;
     }
 
     await logActivity(workspaceId, req.user._id, "member_invited", {
-      invitedEmail: email,
+      invitedEmail: cleanEmail,
       role: inviteRole
     });
 
     res.json({
-      message: emailSent ? "Invite sent via email" : "Invite created (email not sent — check SMTP config)",
+      message: emailSent ? "Invite sent via email" : `Invite link created${emailErrorReason ? ` (${emailErrorReason})` : ""}. You can copy the link below.`,
       inviteLink,
-      emailSent
+      emailSent,
+      ...(emailErrorReason && { emailError: emailErrorReason })
     });
 
   } catch (err) {
@@ -123,7 +142,7 @@ exports.joinWorkspace = async (req, res) => {
       return res.status(400).json({ message: "Invalid invite token" });
     }
 
-    if (decoded.email !== req.user.email) {
+    if ((decoded.email || "").toLowerCase() !== (req.user.email || "").toLowerCase()) {
       return res.status(403).json({ message: "This invite is for a different email address" });
     }
 
@@ -133,8 +152,11 @@ exports.joinWorkspace = async (req, res) => {
     }
 
     // Check if user is already a member
-    const isMember = workspace.members.some(m => m.userId.toString() === req.user._id.toString());
-    if (isMember) {
+    const alreadyMember = workspace.members.some(m => {
+      const mId = m.userId?._id || m.userId;
+      return mId && mId.toString() === req.user._id.toString();
+    });
+    if (alreadyMember) {
       return res.status(400).json({ message: "You are already a member of this workspace" });
     }
 
@@ -185,7 +207,7 @@ exports.changeRole = async (req, res) => {
     const { workspaceId, userId } = req.params;
     const { role } = req.body;
 
-    const workspace = await Workspace.findById(workspaceId).populate("members.userId");
+    const workspace = await Workspace.findById(workspaceId).populate("members.userId", "name email avatar");
 
     const member = workspace.members.find(
       (m) => m.userId._id.toString() === userId

@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, useEffect } from "react";
 import API from "../services/api";
+import { getStoredToken, getStoredUserId } from "../utils/auth";
 
 /* ─── Initial State ──────────────────────────────────────────── */
 const initialState = {
@@ -61,7 +62,7 @@ export function WorkspaceProvider({ children }) {
 
   /* ─ Fetch all workspaces on mount ─ */
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = getStoredToken();
     if (!token) return;
     fetchWorkspaces();
   }, []);
@@ -119,7 +120,7 @@ export function WorkspaceProvider({ children }) {
       dispatch({ type: "SET_MEMBERS", payload: res.data });
 
       // Determine current user's role
-      const userId = JSON.parse(localStorage.getItem("user") || "{}")._id;
+      const userId = getStoredUserId();
       const m = res.data.find(
         m => m.userId?._id?.toString() === userId || m.userId?.toString() === userId
       );
@@ -151,6 +152,7 @@ export function WorkspaceProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useWorkspace() {
   const ctx = useContext(WorkspaceContext);
   if (!ctx) throw new Error("useWorkspace must be used inside <WorkspaceProvider>");

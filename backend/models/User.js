@@ -37,6 +37,26 @@ const userschema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: {
+      transform: function (doc, ret) {
+        delete ret.password;
+        if (ret.github) {
+          delete ret.github.accessToken;
+          delete ret.github.tokenIv;
+        }
+        return ret;
+      },
+    },
+    toObject: {
+      transform: function (doc, ret) {
+        delete ret.password;
+        if (ret.github) {
+          delete ret.github.accessToken;
+          delete ret.github.tokenIv;
+        }
+        return ret;
+      },
+    },
   }
 );
 

@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import AppShell from "../components/AppShell";
 import NotificationBell from "../components/NotificationBell";
 import { useSocket } from "../context/SocketContext";
+import { getStoredUser } from "../utils/auth";
 
 const IconSend = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -43,7 +44,7 @@ export default function DMView() {
   const bottomRef    = useRef(null);
   const typingTimer  = useRef(null);
   const typingTout   = useRef(null);
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = getStoredUser();
   const { socket } = useSocket();
 
   useEffect(() => {

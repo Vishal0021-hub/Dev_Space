@@ -9,6 +9,7 @@ import InviteModal from "../components/InviteModal";
 import AppShell from "../components/AppShell";
 import NotificationBell from "../components/NotificationBell";
 import { useWorkspace } from "../context/WorkspaceContext";
+import { getStoredUserId } from "../utils/auth";
 
 /* ─── Icons ──────────────────────────────────────────────────── */
 const IconPlus     = ({ size=16 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
@@ -65,14 +66,17 @@ const Projects = () => {
 
   const fetchWorkspace = async () => {
     try {
-      const res = await API.get("/workspaces");
-      const current = res.data.find(w => w._id === workspaceId);
+      let current = workspaces?.find(w => w._id === workspaceId);
+      if (!current) {
+        const res = await API.get("/workspaces");
+        current = res.data.find(w => w._id === workspaceId);
+      }
       setWorkspace(current);
 
       // Sync context
       if (current) setActiveWorkspace(current);
 
-      const userId = JSON.parse(localStorage.getItem("user") || "{}")._id;
+      const userId = getStoredUserId();
       const m = current?.members?.find(
         m => m.userId?.toString() === userId || m.userId?._id?.toString() === userId
       );

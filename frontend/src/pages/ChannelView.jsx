@@ -3,9 +3,9 @@ import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import { toast } from "react-hot-toast";
 import AppShell from "../components/AppShell";
-import NotificationBell from "../components/NotificationBell";
 import { MessageSkeleton } from "../components/Skeletons";
 import { useSocket } from "../context/SocketContext";
+import { getStoredUser } from "../utils/auth";
 
 const IconSend = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -49,7 +49,7 @@ export default function ChannelView() {
   const [typingUsers, setTypingUsers] = useState({}); // { userId: name }
   const bottomRef = useRef(null);
   const typingTimers = useRef({});
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = getStoredUser();
   const { socket } = useSocket();
 
   useEffect(() => {
@@ -243,8 +243,8 @@ export default function ChannelView() {
             </button>
           </form>
         </div>
+        <style>{`@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }`}</style>
       </div>
     </AppShell>
   );
 }
-<style>{`@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }`}</style>

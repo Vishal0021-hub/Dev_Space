@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useWorkspace } from "../context/WorkspaceContext";
 import API from "../services/api";
 import { toast } from "react-hot-toast";
+import { getStoredUser } from "../utils/auth";
 
 /* ─── Icons ──────────────────────────────────────────────────── */
 const IconLogo = () => (
@@ -121,7 +122,7 @@ export default function AppShell({ children }) {
     refreshWorkspaces, refreshChannels
   } = useWorkspace();
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = getStoredUser();
 
   const [sectionsOpen, setSectionsOpen] = useState({ channels: true, dms: true, projects: true });
   const [newChannelName, setNewChannelName] = useState("");
@@ -448,18 +449,15 @@ export default function AppShell({ children }) {
                 />
                 {sectionsOpen.dms && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 2 }}>
-                    {members.filter(m => {
-                      const memberId = m.userId?._id || m.userId;
-                      const myId = JSON.parse(localStorage.getItem("user") || "{}")._id;
-                      return memberId?.toString() !== myId?.toString();
-                    }).length === 0 ? (
-                      <div style={{ padding: "4px 8px", fontSize: 12, color: C.textMuted }}>No other members to DM</div>
-                    ) : (
-                      members.filter(m => {
+                    {(() => {
+                      const otherMembers = members.filter(m => {
                         const memberId = m.userId?._id || m.userId;
-                        const myId = JSON.parse(localStorage.getItem("user") || "{}")._id;
-                        return memberId?.toString() !== myId?.toString();
-                      }).map(m => {
+                        return memberId?.toString() !== user._id?.toString();
+                      });
+                      if (otherMembers.length === 0) {
+                        return <div style={{ padding: "4px 8px", fontSize: 12, color: C.textMuted }}>No other members to DM</div>;
+                      }
+                      return otherMembers.map(m => {
                         const memberId = m.userId?._id || m.userId;
                         const memberName = m.userId?.name || "Unknown";
                         const roleStyle = ROLE_COLORS[m.role] || ROLE_COLORS.member;
@@ -486,8 +484,8 @@ export default function AppShell({ children }) {
                             }}>{m.role}</span>
                           </Link>
                         );
-                      })
-                    )}
+                      });
+                    })()}
                   </div>
                 )}
               </div>

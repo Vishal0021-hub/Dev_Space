@@ -34,7 +34,7 @@ function Signup() {
       }
 
       // Gmail-only restriction (front-end fast-fail)
-      if (!form.email || !/^[a-zA-Z0-9._%+\-]+@gmail\.com$/i.test(form.email)) {
+      if (!form.email || !/^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(form.email)) {
         return toast.error("Only Gmail accounts (@gmail.com) are allowed to sign up");
       }
 

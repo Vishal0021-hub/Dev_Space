@@ -4,21 +4,54 @@ const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 
 /* ── CORS ────────────────────────────────────────────────────── */
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
-  .split(",")
-  .map(s => s.trim())
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]
+  .filter(Boolean)
+  .flatMap(u => u.split(","))
+  .map(s => s.trim().replace(/\/$/, ""))
   .filter(Boolean);
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    // Allow requests with no origin (curl, mobile apps, server-to-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS: origin ${origin} not allowed`));
+
+    const normalizedOrigin = origin.replace(/\/$/, "");
+
+    // Check exact match in configured allowed origins
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    // Allow localhost and local dev
+    if (
+      normalizedOrigin.includes("localhost") ||
+      normalizedOrigin.includes("127.0.0.1")
+    ) {
+      return callback(null, true);
+    }
+
+    // Allow any Render deployment origin (*.onrender.com)
+    try {
+      const parsed = new URL(origin);
+      if (parsed.hostname.endsWith(".onrender.com")) {
+        return callback(null, true);
+      }
+    } catch {
+      // invalid url format
+    }
+
+    // Reject cleanly without crashing Express with an unhandled Error
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+  maxAge: 86400, // 24 hours — browsers cache preflight OPTIONS, preventing duplicate preflights
 };
 
 /* ── Safe NoSQL injection sanitizer ─────────────────────────────
