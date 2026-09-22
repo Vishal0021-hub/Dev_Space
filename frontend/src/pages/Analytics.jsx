@@ -11,17 +11,12 @@ import { useWorkspace } from "../context/WorkspaceContext";
 import { toast } from "react-hot-toast";
 
 /* ── Small stat card ───────────────────────────────────────────── */
-function StatCard({ label, value, color = "#818cf8", sub }) {
+function StatCard({ label, value, color = "var(--accent)", sub }) {
   return (
-    <div style={{
-      background: "rgba(255,255,255,0.03)",
-      border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 16, padding: "20px 24px",
-      flex: "1 1 180px", minWidth: 160,
-    }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 36, fontWeight: 800, color, lineHeight: 1 }}>{value ?? "—"}</div>
-      {sub && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>{sub}</div>}
+    <div className="bg-bg-surface border border-border rounded-3xl p-6 flex-1 min-w-[160px] shadow-xs flex flex-col justify-between">
+      <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">{label}</div>
+      <div className="text-3xl font-extrabold tracking-tight" style={{ color }}>{value ?? "—"}</div>
+      {sub && <div className="text-xs text-text-muted mt-2 font-mono">{sub}</div>}
     </div>
   );
 }
@@ -29,24 +24,20 @@ function StatCard({ label, value, color = "#818cf8", sub }) {
 /* ── Section wrapper ───────────────────────────────────────────── */
 function Section({ title, children }) {
   return (
-    <div style={{
-      background: "rgba(255,255,255,0.02)",
-      border: "1px solid rgba(255,255,255,0.06)",
-      borderRadius: 16, padding: 24, marginBottom: 20,
-    }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginBottom: 20 }}>{title}</div>
+    <div className="bg-bg-surface border border-border rounded-3xl p-6 mb-5 shadow-xs">
+      <div className="text-sm font-bold text-text-heading mb-5">{title}</div>
       {children}
     </div>
   );
 }
 
-const CHART_COLORS = ["#818cf8", "#34d399", "#fbbf24", "#f87171", "#60a5fa", "#a78bfa"];
+const CHART_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6"];
 const RANGE_OPTIONS = ["7d", "30d", "90d"];
 
 const tooltipStyle = {
-  contentStyle: { background: "#0d0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, fontSize: 12 },
-  labelStyle: { color: "rgba(255,255,255,0.5)" },
-  itemStyle: { color: "#e2e8f0" },
+  contentStyle: { background: "rgb(var(--bg-surface))", border: "1px solid rgb(var(--border))", borderRadius: 12, fontSize: 12, color: "rgb(var(--text-heading))", boxShadow: "0 10px 30px rgba(0,0,0,0.15)" },
+  labelStyle: { color: "rgb(var(--text-muted))" },
+  itemStyle: { color: "rgb(var(--text-heading))" },
 };
 
 export default function Analytics() {
@@ -90,196 +81,196 @@ export default function Analytics() {
 
   return (
     <AppShell>
-      <div style={{
-        padding: "28px 32px",
-        maxWidth: 1200, margin: "0 auto", width: "100%",
-        fontFamily: "Figtree, Inter, sans-serif",
-        color: "#e2e8f0",
-        minHeight: "100vh",
-      }}>
+      <div className="min-h-screen bg-bg-canvas text-text-heading transition-colors py-8 px-8">
+        <div className="max-w-7xl mx-auto w-full">
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>📊 Analytics</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-              {activeWorkspace?.name || "Workspace"} · Last {range}
+          {/* Header */}
+          <div className="flex items-center justify-between mb-7">
+            <div>
+              <h1 className="text-2xl font-extrabold text-text-heading m-0 tracking-tight">📊 Telemetry & Analytics</h1>
+              <div className="text-xs text-text-muted mt-1 font-mono">
+                {activeWorkspace?.name || "Workspace"} • Last {range} window
+              </div>
+            </div>
+            {/* Range selector */}
+            <div className="flex gap-1 bg-bg-surface p-1 rounded-2xl border border-border">
+              {RANGE_OPTIONS.map(r => (
+                <button
+                  key={r}
+                  onClick={() => setRange(r)}
+                  className={`py-1.5 px-4 rounded-xl border text-xs font-bold cursor-pointer transition ${
+                    range === r
+                      ? "bg-accent text-white border-accent shadow-xs"
+                      : "bg-transparent border-transparent text-text-muted hover:text-text-heading"
+                  }`}
+                >{r}</button>
+              ))}
             </div>
           </div>
-          {/* Range selector */}
-          <div style={{ display: "flex", gap: 6, background: "rgba(255,255,255,0.04)", padding: 4, borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)" }}>
-            {RANGE_OPTIONS.map(r => (
-              <button key={r} onClick={() => setRange(r)} style={{
-                padding: "6px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-                background: range === r ? "rgba(99,102,241,0.25)" : "transparent",
-                color: range === r ? "#818cf8" : "rgba(255,255,255,0.45)",
-                fontWeight: 700, fontSize: 12, transition: "all 0.15s",
-              }}>{r}</button>
-            ))}
-          </div>
-        </div>
 
-        {loading && (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: 300, color: "rgba(255,255,255,0.3)", fontSize: 14 }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ width: 40, height: 40, border: "3px solid rgba(255,255,255,0.08)", borderTop: "3px solid #818cf8", borderRadius: "50%", animation: "spin 0.7s linear infinite", margin: "0 auto 12px" }}/>
-              Loading analytics…
+          {loading && (
+            <div className="flex justify-center items-center h-72 text-text-muted text-sm">
+              <div className="text-center">
+                <div className="w-10 h-10 border-3 border-border border-t-accent rounded-full animate-spin mx-auto mb-3" />
+                Loading analytics…
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {!loading && data && (
-          <>
-            {/* ── Stat Cards ── */}
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
-              <StatCard label="Total Tasks"   value={data.tasksByStatus.total}  color="#818cf8" />
-              <StatCard label="Completed"     value={data.tasksByStatus.done}   color="#34d399" sub={`${pct}% completion rate`} />
-              <StatCard label="In Progress"   value={data.tasksByStatus.inprogress} color="#fbbf24" />
-              <StatCard label="Overdue"       value={data.overdueCount}         color="#f87171" sub="Past due date" />
-              <StatCard label="Standup Rate"  value={`${data.standup?.averageRate || 0}%`} color="#38bdf8" sub={`${data.standup?.totalSubmissions || 0} check-ins`} />
-            </div>
+          {!loading && data && (
+            <>
+              {/* ── Stat Cards ── */}
+              <div className="flex gap-4 flex-wrap mb-5">
+                <StatCard label="Total Tasks"   value={data.tasksByStatus.total}  color="rgb(var(--accent))" />
+                <StatCard label="Completed"     value={data.tasksByStatus.done}   color="#10b981" sub={`${pct}% completion rate`} />
+                <StatCard label="In Progress"   value={data.tasksByStatus.inprogress} color="#f59e0b" />
+                <StatCard label="Overdue"       value={data.overdueCount}         color="#ef4444" sub="Past due date" />
+                <StatCard label="Standup Rate"  value={`${data.standup?.averageRate || 0}%`} color="#0ea5e9" sub={`${data.standup?.totalSubmissions || 0} check-ins`} />
+              </div>
 
-            {/* ── Standup Participation & Blockers Chart ── */}
-            <Section title="☀️ Daily Standup Participation & Impediments">
-              {!data.standup?.stats?.length ? (
-                <div style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", padding: "24px 0", fontSize: 13 }}>
-                  No standup entries submitted in this time range
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={data.standup.stats}>
-                    <CartesianGrid stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
-                    <YAxis yAxisId="rate" domain={[0, 100]} unit="%" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
-                    <YAxis yAxisId="count" orientation="right" allowDecimals={false} tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
-                    <Tooltip {...tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }} />
-                    <Line yAxisId="rate" type="monotone" dataKey="participationRate" stroke="#38bdf8" strokeWidth={2.5} dot={{ fill: "#38bdf8", r: 3 }} name="Participation Rate (%)" />
-                    <Line yAxisId="count" type="monotone" dataKey="blockers" stroke="#f87171" strokeWidth={2} strokeDasharray="3 3" dot={{ fill: "#f87171", r: 3 }} name="Blockers Reported" />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </Section>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
-              {/* ── Completed Over Time ── */}
-              <Section title="✅ Tasks Completed Over Time">
-                {data.completedOverTime.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", padding: "20px 0", fontSize: 13 }}>No completed tasks in this range</div>
+              {/* ── Standup Participation & Blockers Chart ── */}
+              <Section title="☀️ Daily Standup Participation & Impediments">
+                {!data.standup?.stats?.length ? (
+                  <div className="text-center text-text-muted py-6 text-xs border border-dashed border-border rounded-2xl">
+                    No standup entries submitted in this time range
+                  </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
-                    <LineChart data={data.completedOverTime}>
-                      <CartesianGrid stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
-                      <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <LineChart data={data.standup.stats}>
+                      <CartesianGrid stroke="rgb(var(--border) / 0.5)" />
+                      <XAxis dataKey="date" tick={{ fill: "rgb(var(--text-muted))", fontSize: 10 }} tickLine={false} axisLine={false} />
+                      <YAxis yAxisId="rate" domain={[0, 100]} unit="%" tick={{ fill: "rgb(var(--text-muted))", fontSize: 10 }} tickLine={false} axisLine={false} />
+                      <YAxis yAxisId="count" orientation="right" allowDecimals={false} tick={{ fill: "rgb(var(--text-muted))", fontSize: 10 }} tickLine={false} axisLine={false} />
                       <Tooltip {...tooltipStyle} />
-                      <Line type="monotone" dataKey="count" stroke="#34d399" strokeWidth={2} dot={{ fill: "#34d399", r: 3 }} name="Completed" />
+                      <Legend wrapperStyle={{ fontSize: 12, color: "rgb(var(--text-muted))" }} />
+                      <Line yAxisId="rate" type="monotone" dataKey="participationRate" stroke="#0ea5e9" strokeWidth={2.5} dot={{ fill: "#0ea5e9", r: 3 }} name="Participation Rate (%)" />
+                      <Line yAxisId="count" type="monotone" dataKey="blockers" stroke="#ef4444" strokeWidth={2} strokeDasharray="3 3" dot={{ fill: "#ef4444", r: 3 }} name="Blockers Reported" />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
               </Section>
 
-              {/* ── Velocity by Member ── */}
-              <Section title="⚡ Velocity by Member">
-                {data.velocityByMember.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", padding: "20px 0", fontSize: 13 }}>No completed tasks assigned in this range</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                {/* ── Completed Over Time ── */}
+                <Section title="✅ Tasks Completed Over Time">
+                  {data.completedOverTime.length === 0 ? (
+                    <div className="text-center text-text-muted py-6 text-xs border border-dashed border-border rounded-2xl">No completed tasks in this range</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <LineChart data={data.completedOverTime}>
+                        <CartesianGrid stroke="rgb(var(--border) / 0.5)" />
+                        <XAxis dataKey="date" tick={{ fill: "rgb(var(--text-muted))", fontSize: 10 }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fill: "rgb(var(--text-muted))", fontSize: 10 }} tickLine={false} axisLine={false} />
+                        <Tooltip {...tooltipStyle} />
+                        <Line type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} dot={{ fill: "#10b981", r: 3 }} name="Completed" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                </Section>
+
+                {/* ── Velocity by Member ── */}
+                <Section title="⚡ Velocity by Member">
+                  {data.velocityByMember.length === 0 ? (
+                    <div className="text-center text-text-muted py-6 text-xs border border-dashed border-border rounded-2xl">No completed tasks assigned in this range</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={data.velocityByMember} layout="vertical">
+                        <CartesianGrid stroke="rgb(var(--border) / 0.5)" horizontal={false} />
+                        <XAxis type="number" tick={{ fill: "rgb(var(--text-muted))", fontSize: 10 }} tickLine={false} axisLine={false} />
+                        <YAxis type="category" dataKey="name" tick={{ fill: "rgb(var(--text-body))", fontSize: 11 }} tickLine={false} axisLine={false} width={90} />
+                        <Tooltip {...tooltipStyle} />
+                        <Bar dataKey="count" name="Tasks Done" fill="rgb(var(--accent))" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </Section>
+              </div>
+
+              {/* ── Burndown Chart ── */}
+              <Section title="🔥 Burndown — Tasks Created vs Completed">
+                {data.burndown.length === 0 ? (
+                  <div className="text-center text-text-muted py-6 text-xs border border-dashed border-border rounded-2xl">No data in this range</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={data.velocityByMember} layout="vertical">
-                      <CartesianGrid stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                      <XAxis type="number" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
-                      <YAxis type="category" dataKey="name" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} tickLine={false} axisLine={false} width={90} />
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={data.burndown}>
+                      <CartesianGrid stroke="rgb(var(--border) / 0.5)" />
+                      <XAxis dataKey="date" tick={{ fill: "rgb(var(--text-muted))", fontSize: 10 }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fill: "rgb(var(--text-muted))", fontSize: 10 }} tickLine={false} axisLine={false} />
                       <Tooltip {...tooltipStyle} />
-                      <Bar dataKey="count" name="Tasks Done" fill="#818cf8" radius={[0, 4, 4, 0]} />
-                    </BarChart>
+                      <Legend wrapperStyle={{ fontSize: 12, color: "rgb(var(--text-muted))" }} />
+                      <Line type="monotone" dataKey="created"   stroke="#f59e0b" strokeWidth={2} dot={false} name="Created" />
+                      <Line type="monotone" dataKey="completed" stroke="#10b981" strokeWidth={2} dot={false} name="Completed" />
+                    </LineChart>
                   </ResponsiveContainer>
                 )}
               </Section>
-            </div>
 
-            {/* ── Burndown Chart ── */}
-            <Section title="🔥 Burndown — Tasks Created vs Completed">
-              {data.burndown.length === 0 ? (
-                <div style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", padding: "20px 0", fontSize: 13 }}>No data in this range</div>
-              ) : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={data.burndown}>
-                    <CartesianGrid stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickLine={false} axisLine={false} />
-                    <Tooltip {...tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }} />
-                    <Line type="monotone" dataKey="created"   stroke="#fbbf24" strokeWidth={2} dot={false} name="Created" />
-                    <Line type="monotone" dataKey="completed" stroke="#34d399" strokeWidth={2} dot={false} name="Completed" />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </Section>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-              {/* ── Top Contributors ── */}
-              <Section title="🏆 Top Contributors">
-                {data.topContributors.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", padding: "20px 0", fontSize: 13 }}>No activity yet</div>
-                ) : data.topContributors.map((c, i) => (
-                  <div key={c.userId} style={{
-                    display: "flex", alignItems: "center", gap: 12,
-                    padding: "10px 0",
-                    borderBottom: i < data.topContributors.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
-                  }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: "50%",
-                      background: CHART_COLORS[i % CHART_COLORS.length],
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0,
-                    }}>
-                      {i + 1}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>{c.name}</div>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-                        {c.tasksCompleted} tasks · {c.messages} msgs · {c.snippets} snippets
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* ── Top Contributors ── */}
+                <Section title="🏆 Top Contributors">
+                  {data.topContributors.length === 0 ? (
+                    <div className="text-center text-text-muted py-6 text-xs border border-dashed border-border rounded-2xl">No activity yet</div>
+                  ) : data.topContributors.map((c, i) => (
+                    <div
+                      key={c.userId}
+                      className={`flex items-center gap-3 py-2.5 ${
+                        i < data.topContributors.length - 1 ? "border-b border-border/50" : ""
+                      }`}
+                    >
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-xs"
+                        style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                      >
+                        {i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-text-heading">{c.name}</div>
+                        <div className="text-[10px] text-text-muted">
+                          {c.tasksCompleted} tasks · {c.messages} msgs · {c.snippets} snippets
+                        </div>
+                      </div>
+                      <div
+                        className="text-xs font-bold font-mono"
+                        style={{ color: i === 0 ? "#f59e0b" : i === 1 ? "#94a3b8" : "#a855f7" }}
+                      >
+                        {c.score} pts
                       </div>
                     </div>
-                    <div style={{
-                      fontSize: 14, fontWeight: 800,
-                      color: i === 0 ? "#fbbf24" : i === 1 ? "#94a3b8" : "#a78bfa",
-                    }}>
-                      {c.score} pts
-                    </div>
-                  </div>
-                ))}
-              </Section>
+                  ))}
+                </Section>
 
-              {/* ── Overdue Tasks ── */}
-              <Section title="⚠️ Overdue Tasks">
-                {data.overdueList.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "rgba(52,211,153,0.7)", padding: "20px 0", fontSize: 13 }}>🎉 No overdue tasks!</div>
-                ) : data.overdueList.map(t => (
-                  <div key={t._id} style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    padding: "8px 0",
-                    borderBottom: "1px solid rgba(255,255,255,0.04)",
-                  }}>
-                    <span style={{
-                      width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
-                      background: t.priority === "high" ? "#ef4444" : t.priority === "medium" ? "#f59e0b" : "#10b981",
-                    }}/>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
-                      <div style={{ fontSize: 11, color: "#f87171" }}>
-                        Due {t.dueDate ? new Date(t.dueDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}
-                        {t.assignedTo?.name ? ` · ${t.assignedTo.name}` : ""}
+                {/* ── Overdue Tasks ── */}
+                <Section title="⚠️ Overdue Tasks">
+                  {data.overdueList.length === 0 ? (
+                    <div className="text-center text-emerald-500 py-6 text-xs border border-dashed border-emerald-500/20 bg-emerald-500/5 rounded-2xl">
+                      🎉 No overdue tasks! All sprints are on schedule.
+                    </div>
+                  ) : data.overdueList.map((t, i) => (
+                    <div
+                      key={t._id}
+                      className={`flex items-center gap-2.5 py-2.5 ${
+                        i < data.overdueList.length - 1 ? "border-b border-border/50" : ""
+                      }`}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ background: t.priority === "high" ? "#ef4444" : t.priority === "medium" ? "#f59e0b" : "#10b981" }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-text-heading truncate">{t.title}</div>
+                        <div className="text-[10px] text-rose-500 font-mono">
+                          Due {t.dueDate ? new Date(t.dueDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}
+                          {t.assignedTo?.name ? ` · ${t.assignedTo.name}` : ""}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </Section>
-            </div>
-          </>
-        )}
+                  ))}
+                </Section>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </AppShell>
   );
 }

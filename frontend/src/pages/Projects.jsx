@@ -2,102 +2,105 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import { toast } from "react-hot-toast";
-import { Link } from "react-router-dom";
-import ActivityLog from "../components/ActivityLog";
-import MembersSidebar from "../components/MembersSidebar";
-import InviteModal from "../components/InviteModal";
+import {
+  Folder,
+  ArrowLeft,
+  ArrowRight,
+  Activity,
+  Users,
+  Plus,
+  Settings as SettingsIcon,
+  X,
+  Kanban,
+  Sparkles,
+  Calendar,
+} from "lucide-react";
 import AppShell from "../components/AppShell";
 import NotificationBell from "../components/NotificationBell";
+import MembersSidebar from "../components/MembersSidebar";
+import InviteModal from "../components/InviteModal";
+import ActivityLog from "../components/ActivityLog";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { getStoredUserId } from "../utils/auth";
 
-/* ─── Icons ──────────────────────────────────────────────────── */
-const IconPlus     = ({ size=16 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
-const IconFolder   = ({ size=20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>;
-const IconBack     = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>;
-const IconArrow    = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>;
-const IconActivity = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
-const IconUsers    = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-const IconTrash    = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>;
+export default function Projects() {
+  const { workspaceId: paramWorkspaceId } = useParams();
+  const navigate = useNavigate();
+  const { workspaces, activeWorkspace, setActiveWorkspace, refreshWorkspaces } = useWorkspace();
 
-// Project accent colors — flat solid, assigned by index
-const PROJECT_GRADIENTS = [
-  "#4F46E5",  // indigo
-  "#0284C7",  // sky
-  "#059669",  // emerald
-  "#D97706",  // amber
-  "#9333EA",  // purple
-  "#0D9488",  // teal
-];
+  const currentWorkspaceId = paramWorkspaceId || activeWorkspace?._id || (workspaces?.length > 0 ? workspaces[0]._id : null);
 
-const formatDate = (d) => {
-  if (!d) return null;
-  return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-};
-
-/* ═══════════════════════════════════════════════════════════════ */
-const Projects = () => {
-  const { workspaceId } = useParams();
-  const navigate        = useNavigate();
-  const { workspaces, setActiveWorkspace } = useWorkspace();
-
-  const [projects,   setProjects]   = useState([]);
-  const [workspace,  setWorkspace]  = useState(null);
-  const [loading,    setLoading]    = useState(true);
-  const [members,    setMembers]    = useState([]);
-  const [userRole,   setUserRole]   = useState("member");
+  const [projects, setProjects] = useState([]);
+  const [workspace, setWorkspace] = useState(activeWorkspace || null);
+  const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState([]);
+  const [userRole, setUserRole] = useState("member");
 
   // Sidebars / Modals
-  const [showMembers,    setShowMembers]    = useState(false);
-  const [showActivity,   setShowActivity]   = useState(false);
-  const [isModalOpen,    setIsModalOpen]    = useState(false);
-  const [isInviteOpen,   setIsInviteOpen]   = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-  // Form
-  const [name,        setName]        = useState("");
+  // New Project Form
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [creating,    setCreating]    = useState(false);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    fetchWorkspace();
-    fetchProjects();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId]);
+    if (currentWorkspaceId) {
+      fetchWorkspace();
+      fetchProjects();
+      fetchMembers();
+    } else {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentWorkspaceId]);
 
   const fetchWorkspace = async () => {
+    if (!currentWorkspaceId) return;
     try {
-      let current = workspaces?.find(w => w._id === workspaceId);
+      let current = workspaces?.find((w) => w._id === currentWorkspaceId);
       if (!current) {
         const res = await API.get("/workspaces");
-        current = res.data.find(w => w._id === workspaceId);
+        const list = Array.isArray(res.data) ? res.data : res.data?.workspaces || [];
+        current = list.find((w) => w._id === currentWorkspaceId);
       }
-      setWorkspace(current);
-
-      // Sync context
-      if (current) setActiveWorkspace(current);
-
-      const userId = getStoredUserId();
-      const m = current?.members?.find(
-        m => m.userId?.toString() === userId || m.userId?._id?.toString() === userId
-      );
-      if (m) setUserRole(m.role);
-
-      fetchMembers();
-    } catch (err) { console.error(err); }
+      if (current) {
+        setWorkspace(current);
+        if (activeWorkspace?._id !== current._id) {
+          setActiveWorkspace(current);
+        }
+        const userId = getStoredUserId();
+        const m = current.members?.find(
+          (mb) => mb.userId?.toString() === userId || mb.userId?._id?.toString() === userId
+        );
+        if (m) setUserRole(m.role);
+      }
+    } catch (err) {
+      console.error("fetchWorkspace error:", err);
+    }
   };
 
   const fetchMembers = async () => {
+    if (!currentWorkspaceId) return;
     try {
-      const res = await API.get(`/workspaces/${workspaceId}/members`);
-      setMembers(res.data);
-    } catch (err) { console.error("fetchMembers:", err); }
+      const res = await API.get(`/workspaces/${currentWorkspaceId}/members`);
+      const list = Array.isArray(res.data) ? res.data : res.data?.members || [];
+      setMembers(list);
+    } catch (err) {
+      console.error("fetchMembers:", err);
+    }
   };
 
   const fetchProjects = async () => {
+    if (!currentWorkspaceId) return;
     try {
       setLoading(true);
-      const res = await API.get(`/projects/${workspaceId}`);
-      setProjects(res.data);
+      const res = await API.get(`/projects/${currentWorkspaceId}`);
+      const list = Array.isArray(res.data) ? res.data : res.data?.projects || [];
+      setProjects(list);
     } catch (err) {
       console.error("Error fetching projects:", err);
       toast.error("Failed to load projects");
@@ -108,16 +111,24 @@ const Projects = () => {
 
   const createProject = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !currentWorkspaceId) return;
     setCreating(true);
     const t = toast.loading("Creating project…");
     try {
-      const res = await API.post("/projects", { name: name.trim(), workspaceId, description });
+      const res = await API.post("/projects", {
+        name: name.trim(),
+        workspaceId: currentWorkspaceId,
+        description: description.trim(),
+      });
       toast.success("Project created!", { id: t });
-      setProjects(prev => [...prev, res.data]);
+      setProjects((prev) => [...prev, res.data]);
       setName("");
       setDescription("");
       setIsModalOpen(false);
+
+      // Auto remember this project and navigate to its Kanban board
+      localStorage.setItem("devspace_last_project", res.data._id);
+      navigate(`/boards/${res.data._id}`, { state: { workspaceId: currentWorkspaceId } });
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create project", { id: t });
     } finally {
@@ -129,211 +140,238 @@ const Projects = () => {
 
   return (
     <AppShell>
-      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "#0F172A" }}>
-
-        {/* ── Top bar ── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 32px", height: 64, borderBottom: "1px solid #1E293B", background: "#0F172A", position: "sticky", top: 0, zIndex: 20, flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button onClick={() => navigate("/dashboard")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center", padding: 6, borderRadius: 8, transition: "color 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.color = "#fff"}
-              onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}
-            ><IconBack/></button>
-            <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.1)" }}/>
+      <div className="flex flex-col min-h-screen bg-bg-canvas text-text-heading transition-colors select-none">
+        {/* ========================================================================= */}
+        {/* SUBHEADER: Breadcrumb + Action Controls                                   */}
+        {/* ========================================================================= */}
+        <div className="flex items-center justify-between px-4 sm:px-8 h-16 border-b border-border bg-bg-surface/70 backdrop-blur-md sticky top-0 z-20 shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="bg-transparent border-none cursor-pointer text-text-muted hover:text-text-heading flex items-center p-1.5 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition"
+              title="Return to Dashboard"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div className="w-px h-5 bg-border opacity-30" />
             <div>
-              <div style={{ fontSize: 11, color: "#64748B", fontWeight: 500, letterSpacing: "0.06em" }}>Workspace</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#F1F5F9", fontFamily: "Inter, sans-serif" }}>{workspace?.name || "…"}</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">Workspace</div>
+              <div className="text-sm font-bold text-text-heading truncate max-w-[140px] sm:max-w-xs">
+                {workspace?.name || activeWorkspace?.name || "DevSpace Workspace"}
+              </div>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <NotificationBell/>
-            <button onClick={() => setShowActivity(p => !p)} style={{ background: showActivity ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.7)", transition: "all 0.2s" }} title="Activity">
-              <IconActivity/>
+          {/* Right: Actions */}
+          <div className="flex gap-2 items-center">
+            <NotificationBell />
+            <button
+              onClick={() => setShowActivity((p) => !p)}
+              className={`border rounded-xl w-9 h-9 flex items-center justify-center cursor-pointer transition ${
+                showActivity
+                  ? "bg-accent/15 border-accent text-accent"
+                  : "bg-bg-canvas border-border text-text-muted hover:text-text-heading"
+              }`}
+              title="Activity Log"
+            >
+              <Activity className="w-4 h-4" />
             </button>
-            <button onClick={() => setShowMembers(p => !p)} style={{ background: showMembers ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.7)", transition: "all 0.2s" }} title="Members">
-              <IconUsers/>
+            <button
+              onClick={() => setShowMembers((p) => !p)}
+              className={`border rounded-xl w-9 h-9 flex items-center justify-center cursor-pointer transition ${
+                showMembers
+                  ? "bg-accent/15 border-accent text-accent"
+                  : "bg-bg-canvas border-border text-text-muted hover:text-text-heading"
+              }`}
+              title="Workspace Members"
+            >
+              <Users className="w-4 h-4" />
             </button>
-            {isAdmin && (
-              <>
-                <button onClick={() => setIsInviteOpen(true)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(99,102,241,0.1)"; e.currentTarget.style.color = "#818cf8"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+            <button
+              onClick={() => navigate("/settings")}
+              className="bg-bg-canvas hover:bg-bg-surface-elevated border border-border rounded-xl w-9 h-9 flex items-center justify-center cursor-pointer text-text-muted hover:text-text-heading transition"
+              title="Workspace Settings"
+            >
+              <SettingsIcon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="btn-brand-accent rounded-xl px-3.5 py-1.5 text-xs font-extrabold cursor-pointer flex items-center gap-1.5 shadow-md transition"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">New Project</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* MAIN CONTENT AREA: REAL PROJECT CARDS GRID                                */}
+        {/* ========================================================================= */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+          <div className="max-w-6xl mx-auto space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+              <div>
+                <h2 className="text-2xl font-black tracking-tight flex items-center gap-2.5">
+                  <span>Workspace Projects</span>
+                  <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/20">
+                    {projects.length} {projects.length === 1 ? "Project" : "Projects"}
+                  </span>
+                </h2>
+                <p className="text-xs text-text-muted mt-0.5">
+                  Each project provides a dedicated Kanban board with customizable columns, tasks, and sprint tracking.
+                </p>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="saas-card p-6 h-48 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="w-10 h-10 rounded-2xl bg-black/10 dark:bg-white/10" />
+                      <div className="w-3/4 h-4 rounded bg-black/10 dark:bg-white/10" />
+                      <div className="w-1/2 h-3 rounded bg-black/10 dark:bg-white/10" />
+                    </div>
+                    <div className="w-full h-8 rounded-xl bg-black/5 dark:bg-white/5" />
+                  </div>
+                ))}
+              </div>
+            ) : projects.length === 0 ? (
+              /* ── CLEAN MODERN EMPTY STATE (ZERO ROCKET EMOJIS) ── */
+              <div className="saas-card p-12 text-center max-w-lg mx-auto my-8 flex flex-col items-center gap-4">
+                <div className="w-16 h-16 rounded-3xl bg-accent/15 flex items-center justify-center text-accent shadow-sm">
+                  <Folder className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-text-heading">No Projects Yet</h3>
+                  <p className="text-xs text-text-muted mt-1 max-w-sm leading-relaxed">
+                    Create your first project board to start tracking sprints, managing tasks, and collaborating with your team.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="btn-brand-accent px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer shadow-md mt-2"
                 >
-                  <IconPlus size={13}/> Invite
+                  <Plus className="w-4 h-4" />
+                  <span>Create Your First Project</span>
                 </button>
-                <button onClick={() => navigate("/settings")} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.7)", transition: "all 0.2s" }} title="Workspace Settings">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                </button>
-                <button onClick={() => setIsModalOpen(true)} style={{ background: "#4F46E5", border: "none", borderRadius: 10, padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                  <IconPlus size={13}/> New Project
-                </button>
-              </>
+              </div>
+            ) : (
+              /* ── REAL DYNAMIC PROJECT CARDS ── */
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {projects.map((p) => (
+                  <div
+                    key={p._id}
+                    onClick={() => {
+                      localStorage.setItem("devspace_last_project", p._id);
+                      navigate(`/boards/${p._id}`, { state: { workspaceId: currentWorkspaceId } });
+                    }}
+                    className="saas-card p-6 cursor-pointer hover:border-accent/40 transition-all duration-200 group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-accent/15 text-accent flex items-center justify-center shadow-xs">
+                          <Folder className="w-6 h-6" />
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 border border-border font-bold text-text-muted">
+                          Kanban Board
+                        </span>
+                      </div>
+                      <h3 className="text-base font-black mb-1.5 group-hover:text-accent transition text-text-heading">
+                        {p.name}
+                      </h3>
+                      <p className="text-xs text-text-muted leading-relaxed line-clamp-2 mb-4">
+                        {p.description || "Active sprint workspace for sprint engineering and cross-team collaboration."}
+                      </p>
+                    </div>
+
+                    <div className="pt-4 border-t border-border flex items-center justify-between text-xs">
+                      <span className="font-mono text-[10px] text-text-muted flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "Active Project"}
+                      </span>
+                      <span className="font-bold brand-accent-text flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                        Open Board <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Add Project Card Trigger */}
+                <div
+                  onClick={() => setIsModalOpen(true)}
+                  className="border-2 border-dashed border-border hover:border-accent/50 rounded-3xl p-6 cursor-pointer flex flex-col items-center justify-center text-center gap-3 opacity-70 hover:opacity-100 transition min-h-[190px]"
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center">
+                    <Plus className="w-5 h-5 brand-accent-text" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-text-heading">New Project Board</div>
+                    <div className="text-[11px] text-text-muted mt-0.5">Add another project to this workspace</div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        {/* ── Page header stat bar ── */}
-        <div style={{ padding: "20px 32px 0" }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 500, color: "#64748B", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>Projects</div>
-              <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: "#F1F5F9", fontFamily: "Inter, sans-serif", letterSpacing: "-0.02em" }}>
-                {workspace?.name}
-              </h1>
-            </div>
-            <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 24, fontWeight: 900, color: "#818cf8" }}>{projects.length}</div>
-                <div style={{ fontSize: 11, color: "#64748B", fontWeight: 500 }}>Projects</div>
-              </div>
-              <div style={{ width: 1, height: 32, background: "#1E293B" }}/>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 24, fontWeight: 900, color: "#34d399" }}>{members.length}</div>
-                <div style={{ fontSize: 11, color: "#64748B", fontWeight: 500 }}>Members</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Project grid ── */}
-        <div style={{ padding: "0 32px 40px", flex: 1 }}>
-          {loading ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
-              {[1,2,3,4].map(i => (
-                <div key={i} style={{ height: 180, background: "#1E293B", border: "1px solid rgba(51,65,85,0.4)", borderRadius: 12, animation: "pulse 1.5s ease-in-out infinite", animationDelay: `${i*100}ms` }}/>
-              ))}
-            </div>
-          ) : projects.length === 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", textAlign: "center" }}>
-              <div style={{ width: 80, height: 80, borderRadius: 24, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.18)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: "#818cf8" }}>
-                <IconFolder size={36}/>
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#F1F5F9", marginBottom: 8 }}>No projects yet</div>
-              <p style={{ fontSize: 14, color: "#94A3B8", maxWidth: 340, lineHeight: 1.6, marginBottom: 24 }}>
-                Create your first project to start organising tasks and collaborating with your team.
-              </p>
-              {isAdmin && (
-                <button onClick={() => setIsModalOpen(true)} style={{ background: "#4F46E5", border: "none", borderRadius: 12, padding: "12px 28px", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                  Create First Project →
-                </button>
-              )}
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
-              {projects.map((p, i) => (
-                <div
-                  key={p._id}
-                  onClick={() => navigate(`/boards/${p._id}`, { state: { workspaceId } })}
-                  style={{ background: "#1E293B", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 12, padding: "20px 20px 16px", cursor: "pointer", transition: "all 0.2s", position: "relative", overflow: "hidden" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "#253448"; e.currentTarget.style.borderColor = "rgba(99,102,241,0.3)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(99,102,241,0.10)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "#1E293B"; e.currentTarget.style.borderColor = "rgba(51,65,85,0.5)"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
-                >
-                  {/* Top accent */}
-                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: PROJECT_GRADIENTS[i % PROJECT_GRADIENTS.length] }}/>
-
-                  {/* Icon + Actions */}
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16, marginTop: 6 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: PROJECT_GRADIENTS[i % PROJECT_GRADIENTS.length], display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                      <IconFolder size={20}/>
-                    </div>
-                    <div style={{ display: "flex", gap: 4, opacity: 0 }} className="project-actions"
-                      onMouseEnter={e => e.currentTarget.style.opacity = 1}
-                    >
-                    </div>
-                  </div>
-
-                  {/* Project info */}
-                  <div style={{ fontSize: 16, fontWeight: 600, color: "#F1F5F9", marginBottom: 6, fontFamily: "Inter, sans-serif" }}>{p.name}</div>
-                  {p.description && (
-                    <div style={{ fontSize: 12, color: "#64748B", lineHeight: 1.5, marginBottom: 12 }}>
-                      {p.description.length > 80 ? p.description.slice(0, 80) + "…" : p.description}
-                    </div>
-                  )}
-
-                  {/* Footer */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 16, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                    <div style={{ fontSize: 11, color: "#94A3B8" }}>
-                      Created {formatDate(p.createdAt)}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "#818cf8" }}>
-                      Open Board <IconArrow/>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Add Project card */}
-              {isAdmin && (
-                <button onClick={() => setIsModalOpen(true)} style={{ background: "none", border: "1.5px dashed #334155", borderRadius: 12, padding: "20px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, color: "#64748B", transition: "all 0.2s", minHeight: 160 }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(99,102,241,0.4)"; e.currentTarget.style.color = "#818cf8"; e.currentTarget.style.background = "rgba(99,102,241,0.04)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#334155"; e.currentTarget.style.color = "#64748B"; e.currentTarget.style.background = "none"; }}
-                >
-                  <div style={{ width: 44, height: 44, borderRadius: 12, border: "1.5px dashed currentColor", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <IconPlus size={20}/>
-                  </div>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>New Project</span>
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ── Members Sidebar ── */}
-        {showMembers && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 200 }} onClick={() => setShowMembers(false)}>
-            <div style={{ position: "absolute", right: 0, top: 0, width: 380, height: "100vh", background: "#1E293B", borderLeft: "1px solid #334155" }} onClick={e => e.stopPropagation()}>
-              <MembersSidebar workspaceId={workspaceId} members={members} userRole={userRole} showMembers={showMembers}
-                onUpdate={fetchMembers} onClose={() => setShowMembers(false)} onInviteOpen={() => { setShowMembers(false); setIsInviteOpen(true); }}/>
-            </div>
-          </div>
-        )}
-
-        {/* ── Activity Sidebar ── */}
-        {showActivity && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 200 }} onClick={() => setShowActivity(false)}>
-            <div style={{ position: "absolute", right: 0, top: 0, width: 380, height: "100vh", background: "#1E293B", borderLeft: "1px solid #334155", padding: 24, boxSizing: "border-box", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "#F1F5F9" }}>Activity</h3>
-                <button onClick={() => setShowActivity(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 20 }}>×</button>
-              </div>
-              <ActivityLog workspaceId={workspaceId}/>
-            </div>
-          </div>
-        )}
-
-        {/* ── Invite Modal ── */}
-        {isInviteOpen && (
-          <InviteModal workspaceId={workspaceId} onClose={() => setIsInviteOpen(false)} onInviteSent={fetchMembers}/>
-        )}
-
-        {/* ── Create Project Modal ── */}
+        {/* ========================================================================= */}
+        {/* CREATE PROJECT MODAL                                                      */}
+        {/* ========================================================================= */}
         {isModalOpen && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300 }} onClick={() => setIsModalOpen(false)}>
-            <div style={{ background: "#1E293B", border: "1px solid #334155", borderRadius: 20, padding: 32, width: 420, boxShadow: "0 32px 80px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, color: "#fff" }}>
-                <IconFolder size={22}/>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-150">
+            <div className="w-full max-w-md saas-card p-6 shadow-2xl relative animate-in zoom-in-95 duration-150">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-base font-black text-text-heading">Create New Project</h3>
+                  <p className="text-xs text-text-muted mt-0.5">Add a project Kanban board to {workspace?.name || "your workspace"}</p>
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-1 rounded-xl opacity-60 hover:opacity-100 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#F1F5F9", marginBottom: 6, fontFamily: "Inter, sans-serif" }}>New Project</div>
-              <p style={{ fontSize: 13, color: "#94A3B8", marginBottom: 24 }}>
-                Launch a new project in <strong style={{ color: "#CBD5E1" }}>{workspace?.name}</strong>.
-              </p>
-              <form onSubmit={createProject}>
-                <label style={{ fontSize: 11, fontWeight: 500, color: "#64748B", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.1em" }}>Project name *</label>
-                <input autoFocus required value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Website Redesign, API v2…"
-                  style={{ width: "100%", background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: "10px 14px", color: "#F1F5F9", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 14, fontFamily: "inherit" }}
-                  onFocus={e => e.target.style.borderColor = "rgba(99,102,241,0.5)"}
-                  onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
-                />
-                <label style={{ fontSize: 11, fontWeight: 500, color: "#64748B", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.1em" }}>Description</label>
-                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this project about?" rows={2}
-                  style={{ width: "100%", background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: "10px 14px", color: "#F1F5F9", fontSize: 13, outline: "none", resize: "none", boxSizing: "border-box", marginBottom: 24, fontFamily: "inherit" }}
-                  onFocus={e => e.target.style.borderColor = "rgba(99,102,241,0.5)"}
-                  onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
-                />
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                  <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "1px solid #334155", borderRadius: 10, padding: "9px 18px", color: "#94A3B8", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Cancel</button>
-                  <button type="submit" disabled={creating} style={{ background: "#4F46E5", border: "none", borderRadius: 10, padding: "9px 22px", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
-                    {creating ? "Creating…" : "Launch Project →"}
+
+              <form onSubmit={createProject} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-bold text-text-heading mb-1.5">Project Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Core Engine, Mobile App, Web Platform..."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-bg-canvas border border-border rounded-xl focus:border-accent outline-none text-text-heading font-medium transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-text-heading mb-1.5">Description (Optional)</label>
+                  <textarea
+                    rows={3}
+                    placeholder="What is this project focused on?"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-bg-canvas border border-border rounded-xl focus:border-accent outline-none text-text-heading font-medium transition resize-none"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 rounded-xl border border-border text-text-muted hover:text-text-heading transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating || !name.trim()}
+                    className="btn-brand-accent px-5 py-2 rounded-xl font-bold cursor-pointer transition disabled:opacity-50"
+                  >
+                    {creating ? "Creating…" : "Create Project"}
                   </button>
                 </div>
               </form>
@@ -341,10 +379,29 @@ const Projects = () => {
           </div>
         )}
 
-        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
+        {/* Sidebars & Modals */}
+        <MembersSidebar
+          isOpen={showMembers}
+          onClose={() => setShowMembers(false)}
+          members={members}
+          workspaceId={currentWorkspaceId}
+          onInvite={() => setIsInviteOpen(true)}
+          currentUserRole={userRole}
+          onMembersChange={fetchMembers}
+        />
+
+        <ActivityLog
+          isOpen={showActivity}
+          onClose={() => setShowActivity(false)}
+          workspaceId={currentWorkspaceId}
+        />
+
+        <InviteModal
+          isOpen={isInviteOpen}
+          onClose={() => setIsInviteOpen(false)}
+          workspaceId={currentWorkspaceId}
+        />
       </div>
     </AppShell>
   );
-};
-
-export default Projects;
+}

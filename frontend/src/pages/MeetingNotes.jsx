@@ -9,10 +9,16 @@ import "../utils/collab.css";
 
 /* ── Design tokens ─────────────────────────────────────────── */
 const C = {
-  bgBase: "#0F172A", bgCard: "#1E293B", bgElevated: "#253448",
-  border: "#334155", borderSubtle: "#1E293B",
-  textPrimary: "#F1F5F9", textSecondary: "#94A3B8", textMuted: "#64748B",
-  accent: "#6366F1", accentHover: "#4F46E5",
+  bgBase: "rgb(var(--bg-canvas))",
+  bgCard: "rgb(var(--bg-surface))",
+  bgElevated: "rgb(var(--bg-surface-elevated))",
+  border: "rgb(var(--border))",
+  borderSubtle: "rgb(var(--border))",
+  textPrimary: "rgb(var(--text-heading))",
+  textSecondary: "rgb(var(--text-body))",
+  textMuted: "rgb(var(--text-muted))",
+  accent: "rgb(var(--accent))",
+  accentHover: "rgb(var(--accent-hover))",
 };
 
 /* ── Icons ─────────────────────────────────────────────────── */
@@ -105,116 +111,101 @@ export default function MeetingNotes() {
 
   return (
     <AppShell>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="flex-1 flex flex-col overflow-hidden bg-bg-canvas">
         {/* ── Top bar ── */}
-        <div style={{
-          padding: "16px 28px", display: "flex", alignItems: "center", justifyContent: "space-between",
-          borderBottom: `1px solid ${C.borderSubtle}`,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 20 }}>📝</span>
-            <h1 style={{ fontSize: 18, fontWeight: 700, color: C.textPrimary, margin: 0 }}>Meeting Notes</h1>
-            <span style={{ fontSize: 12, color: C.textMuted, background: "rgba(99,102,241,0.1)", padding: "2px 8px", borderRadius: 8 }}>
+        <div className="px-7 py-4 flex items-center justify-between border-b border-border bg-bg-surface/50 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">📝</span>
+            <h1 className="text-lg font-bold text-text-heading tracking-tight">Meeting Notes</h1>
+            <span className="text-xs font-semibold text-accent bg-accent/10 px-2.5 py-0.5 rounded-full border border-accent/20">
               {meetings.length}
             </span>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              background: C.accent, border: "none", borderRadius: 10,
-              padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
-            }}
+            className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm cursor-pointer"
           >
             <IconPlus size={14} /> New Meeting
           </button>
         </div>
 
-        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        <div className="flex-1 flex overflow-hidden">
           {/* ── Meeting list (left panel) ── */}
-          <div style={{
-            width: selectedMeeting ? 340 : "100%", minWidth: 340,
-            borderRight: selectedMeeting ? `1px solid ${C.borderSubtle}` : "none",
-            overflowY: "auto", padding: "16px",
-            transition: "width 0.2s",
-          }}>
+          <div className={`${selectedMeeting ? "w-80 min-w-[320px] border-r border-border" : "w-full"} overflow-y-auto p-4 transition-all`}>
             {loading ? (
-              <div style={{ textAlign: "center", padding: 40, color: C.textMuted }}>Loading…</div>
+              <div className="text-center py-12 text-sm text-text-muted">Loading meetings…</div>
             ) : meetings.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>📝</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, marginBottom: 6 }}>No meeting notes yet</div>
-                <p style={{ fontSize: 13, color: C.textMuted, maxWidth: 300, margin: "0 auto 20px" }}>
-                  Create your first meeting note to start tracking decisions and action items.
+              <div className="text-center py-16 px-6 max-w-sm mx-auto">
+                <div className="text-4xl mb-3">📝</div>
+                <div className="text-base font-bold text-text-heading mb-1.5">No meeting notes yet</div>
+                <p className="text-xs text-text-muted mb-6 leading-relaxed">
+                  Record decisions, action items, and link tasks with real-time collaboration.
                 </p>
                 <button
                   onClick={() => setShowCreate(true)}
-                  style={{ background: C.accent, border: "none", borderRadius: 10, padding: "10px 20px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  className="bg-accent hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow cursor-pointer"
                 >
                   Create Meeting Note
                 </button>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {meetings.map((m) => (
-                  <button
-                    key={m._id}
-                    onClick={() => setSelectedMeeting(m)}
-                    style={{
-                      background: selectedMeeting?._id === m._id ? C.bgElevated : C.bgCard,
-                      border: `1px solid ${selectedMeeting?._id === m._id ? C.accent : C.border}`,
-                      borderRadius: 14, padding: "14px 16px", cursor: "pointer",
-                      textAlign: "left", transition: "all 0.15s",
-                    }}
-                    onMouseEnter={(e) => { if (selectedMeeting?._id !== m._id) e.currentTarget.style.borderColor = "#475569"; }}
-                    onMouseLeave={(e) => { if (selectedMeeting?._id !== m._id) e.currentTarget.style.borderColor = C.border; }}
-                  >
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.textPrimary, marginBottom: 6 }}>
-                      {m.title}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: C.textMuted }}>
-                      <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <IconCalendar /> {formatDate(m.date)}
-                      </span>
-                      {m.attendees?.length > 0 && (
-                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <IconUsers /> {m.attendees.length}
+              <div className="flex flex-col gap-2.5">
+                {meetings.map((m) => {
+                  const isSelected = selectedMeeting?._id === m._id;
+                  return (
+                    <button
+                      key={m._id}
+                      onClick={() => setSelectedMeeting(m)}
+                      className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-bg-surface-elevated border-accent shadow-sm"
+                          : "bg-bg-surface border-border hover:border-accent/40 hover:bg-bg-surface-elevated/50"
+                      }`}
+                    >
+                      <div className="text-sm font-semibold text-text-heading mb-2 line-clamp-1">
+                        {m.title}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-text-muted">
+                        <span className="flex items-center gap-1.5">
+                          <IconCalendar /> {formatDate(m.date)}
                         </span>
-                      )}
-                      {m.linkedTasks?.length > 0 && (
-                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <IconLink /> {m.linkedTasks.length} tasks
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                        {m.attendees?.length > 0 && (
+                          <span className="flex items-center gap-1.5">
+                            <IconUsers /> {m.attendees.length}
+                          </span>
+                        )}
+                        {m.linkedTasks?.length > 0 && (
+                          <span className="flex items-center gap-1.5">
+                            <IconLink /> {m.linkedTasks.length}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
 
           {/* ── Meeting detail (right panel) ── */}
           {selectedMeeting && (
-            <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+              <div className="flex justify-between items-start">
                 <div>
-                  <h2 style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, margin: "0 0 6px" }}>
+                  <h2 className="text-xl md:text-2xl font-bold text-text-heading mb-1.5 tracking-tight">
                     {selectedMeeting.title}
                   </h2>
-                  <div style={{ display: "flex", gap: 14, fontSize: 12, color: C.textMuted }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <div className="flex items-center gap-3 text-xs text-text-muted">
+                    <span className="flex items-center gap-1.5">
                       <IconCalendar /> {formatDate(selectedMeeting.date)}
                     </span>
+                    <span>•</span>
                     <span>by {selectedMeeting.createdBy?.name || "Unknown"}</span>
                   </div>
                 </div>
                 <button
                   onClick={() => handleDelete(selectedMeeting._id)}
-                  style={{
-                    background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)",
-                    borderRadius: 8, padding: "6px 12px", color: "#f87171", fontSize: 12,
-                    fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
-                  }}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-rose-500 hover:text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition cursor-pointer"
                 >
                   <IconTrash /> Delete
                 </button>
@@ -222,16 +213,16 @@ export default function MeetingNotes() {
 
               {/* Attendees */}
               {selectedMeeting.attendees?.length > 0 && (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                <div>
+                  <div className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-2">
                     Attendees
                   </div>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <div className="flex gap-2 flex-wrap">
                     {selectedMeeting.attendees.map((a) => (
-                      <span key={a._id} style={{
-                        background: "rgba(99,102,241,0.1)", color: "#818cf8",
-                        padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 500,
-                      }}>
+                      <span
+                        key={a._id}
+                        className="bg-accent/10 text-accent border border-accent/20 px-3 py-1 rounded-lg text-xs font-medium"
+                      >
                         {a.name}
                       </span>
                     ))}
@@ -241,20 +232,24 @@ export default function MeetingNotes() {
 
               {/* Linked Tasks */}
               {selectedMeeting.linkedTasks?.length > 0 && (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                <div>
+                  <div className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-2">
                     Linked Tasks
                   </div>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <div className="flex gap-2 flex-wrap">
                     {selectedMeeting.linkedTasks.map((t) => {
-                      const statusColors = { todo: "#94a3b8", inprogress: "#fbbf24", review: "#818cf8", done: "#34d399" };
+                      const statusColors = {
+                        todo: "bg-slate-400",
+                        inprogress: "bg-amber-400",
+                        review: "bg-indigo-400",
+                        done: "bg-emerald-400",
+                      };
                       return (
-                        <span key={t._id} style={{
-                          background: C.bgCard, border: `1px solid ${C.border}`,
-                          padding: "4px 10px", borderRadius: 8, fontSize: 12,
-                          display: "flex", alignItems: "center", gap: 6, color: C.textPrimary,
-                        }}>
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: statusColors[t.status] || "#94a3b8" }} />
+                        <span
+                          key={t._id}
+                          className="bg-bg-surface border border-border px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 text-text-heading shadow-xs"
+                        >
+                          <span className={`w-2 h-2 rounded-full ${statusColors[t.status] || "bg-slate-400"}`} />
                           {t.title}
                         </span>
                       );
@@ -264,18 +259,13 @@ export default function MeetingNotes() {
               )}
 
               {/* Content preview */}
-              <div style={{
-                background: C.bgCard, border: `1px solid ${C.border}`,
-                borderRadius: 14, padding: "20px 24px", minHeight: 200,
-                color: C.textPrimary, fontSize: 14, lineHeight: 1.7,
-              }}>
+              <div className="bg-bg-surface border border-border rounded-2xl p-6 min-h-[220px] text-text-body text-sm leading-relaxed shadow-xs">
                 {selectedMeeting.contentJson ? (
-                  <div style={{ color: C.textSecondary, fontSize: 13 }}>
-                    {/* Render a simple text preview from JSON content */}
+                  <div className="text-text-body leading-relaxed whitespace-pre-line">
                     {extractTextFromJson(selectedMeeting.contentJson)}
                   </div>
                 ) : (
-                  <div style={{ color: C.textMuted, fontStyle: "italic" }}>No content</div>
+                  <div className="text-text-muted italic">No written notes recorded for this meeting.</div>
                 )}
               </div>
             </div>
@@ -287,99 +277,81 @@ export default function MeetingNotes() {
       {showCreate && (
         <div
           onClick={() => setShowCreate(false)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 300,
-            background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(12px)",
-            display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
-          }}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "100%", maxWidth: 680,
-              background: C.bgCard, border: `1px solid ${C.border}`,
-              borderRadius: 20, padding: 32, maxHeight: "90vh", overflowY: "auto",
-              boxShadow: "0 30px 80px rgba(0,0,0,0.7)",
-            }}
+            className="w-full max-w-2xl bg-bg-surface border border-border rounded-3xl p-6 md:p-8 max-h-[90vh] overflow-y-auto shadow-2xl"
           >
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, marginBottom: 4 }}>
+            <h2 className="text-xl font-bold text-text-heading mb-1 tracking-tight">
               New Meeting Note
             </h2>
-            <p style={{ fontSize: 13, color: C.textSecondary, marginBottom: 24 }}>
+            <p className="text-xs text-text-muted mb-6">
               Record decisions, action items, and link tasks with @mentions.
             </p>
 
-            <form onSubmit={handleCreate}>
+            <form onSubmit={handleCreate} className="space-y-4">
               {/* Title */}
-              <label style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Title
-              </label>
-              <input
-                autoFocus
-                value={createTitle}
-                onChange={(e) => setCreateTitle(e.target.value)}
-                placeholder="Sprint Review, Planning, Retro…"
-                required
-                style={{
-                  width: "100%", padding: "10px 14px", borderRadius: 10,
-                  border: `1px solid ${C.border}`, background: C.bgBase,
-                  color: C.textPrimary, fontSize: 14, outline: "none",
-                  marginTop: 6, marginBottom: 16, boxSizing: "border-box",
-                }}
-              />
+              <div>
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-1.5">
+                  Title
+                </label>
+                <input
+                  autoFocus
+                  value={createTitle}
+                  onChange={(e) => setCreateTitle(e.target.value)}
+                  placeholder="Sprint Planning, Architecture Review, 1-on-1…"
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-bg-canvas text-text-heading text-sm outline-none focus:border-accent transition"
+                />
+              </div>
 
               {/* Date */}
-              <label style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Date
-              </label>
-              <input
-                type="date"
-                value={createDate}
-                onChange={(e) => setCreateDate(e.target.value)}
-                style={{
-                  width: "100%", padding: "10px 14px", borderRadius: 10,
-                  border: `1px solid ${C.border}`, background: C.bgBase,
-                  color: C.textPrimary, fontSize: 14, outline: "none",
-                  marginTop: 6, marginBottom: 16, boxSizing: "border-box",
-                  colorScheme: "dark",
-                }}
-              />
+              <div>
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-1.5">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={createDate}
+                  onChange={(e) => setCreateDate(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-bg-canvas text-text-heading text-sm outline-none focus:border-accent transition"
+                />
+              </div>
 
               {/* Attendees */}
-              <label style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Attendees
-              </label>
-              <div style={{
-                display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6, marginBottom: 16,
-              }}>
-                {(members || []).map((m) => {
-                  const userId = m.userId?._id || m._id;
-                  const name = m.userId?.name || m.name || "?";
-                  const selected = createAttendees.includes(userId);
-                  return (
-                    <button
-                      type="button"
-                      key={userId}
-                      onClick={() => toggleAttendee(userId)}
-                      style={{
-                        background: selected ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${selected ? "rgba(99,102,241,0.3)" : C.border}`,
-                        color: selected ? "#818cf8" : C.textSecondary,
-                        borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 500,
-                        cursor: "pointer", transition: "all 0.15s",
-                      }}
-                    >
-                      {name}
-                    </button>
-                  );
-                })}
+              <div>
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-1.5">
+                  Attendees
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {(members || []).map((m) => {
+                    const userId = m.userId?._id || m._id;
+                    const name = m.userId?.name || m.name || "?";
+                    const selected = createAttendees.includes(userId);
+                    return (
+                      <button
+                        type="button"
+                        key={userId}
+                        onClick={() => toggleAttendee(userId)}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition cursor-pointer ${
+                          selected
+                            ? "bg-accent/15 border-accent text-accent"
+                            : "bg-bg-canvas border-border text-text-muted hover:text-text-heading hover:border-border/80"
+                        }`}
+                      >
+                        {name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Tiptap Editor */}
-              <label style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6, display: "block" }}>
-                Notes
-              </label>
-              <div style={{ marginBottom: 24 }}>
+              <div>
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-1.5">
+                  Notes
+                </label>
                 <MeetingEditor
                   ref={editorRef}
                   workspaceId={workspaceId}
@@ -388,24 +360,18 @@ export default function MeetingNotes() {
               </div>
 
               {/* Actions */}
-              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <div className="flex gap-3 justify-end pt-2">
                 <button
                   type="button"
                   onClick={() => setShowCreate(false)}
-                  style={{
-                    padding: "10px 18px", borderRadius: 10,
-                    background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`,
-                    color: C.textSecondary, fontSize: 13, fontWeight: 500, cursor: "pointer",
-                  }}
-                >Cancel</button>
+                  className="px-4 py-2.5 rounded-xl border border-border bg-bg-canvas text-text-muted hover:text-text-heading text-xs font-semibold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  style={{
-                    padding: "10px 22px", borderRadius: 10,
-                    background: C.accent, border: "none",
-                    color: "#fff", fontSize: 13, fontWeight: 600, cursor: creating ? "not-allowed" : "pointer",
-                  }}
+                  className="px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-white text-xs font-semibold transition shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   {creating ? "Saving…" : "Save Notes"}
                 </button>

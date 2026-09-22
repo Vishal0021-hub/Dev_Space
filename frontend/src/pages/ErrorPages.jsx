@@ -4,26 +4,26 @@ import { useNavigate } from "react-router-dom";
 const PageWrapper = ({ children }) => (
   <div style={{
     minHeight: "100vh",
-    background: "#0F172A",
+    background: "rgb(var(--bg-canvas))",
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontFamily: "Figtree, Inter, sans-serif", padding: 24,
+    padding: 24,
     position: "relative", overflow: "hidden",
   }}>
     {/* Decorative blobs */}
-    <div style={{ position: "absolute", top: "10%", left: "15%", width: 300, height: 300, borderRadius: "50%", background: "rgba(99,102,241,0.06)", filter: "blur(80px)", pointerEvents: "none" }}/>
-    <div style={{ position: "absolute", bottom: "15%", right: "10%", width: 250, height: 250, borderRadius: "50%", background: "rgba(139,92,246,0.05)", filter: "blur(60px)", pointerEvents: "none" }}/>
+    <div style={{ position: "absolute", top: "10%", left: "15%", width: 300, height: 300, borderRadius: "50%", background: "rgb(var(--accent) / 0.08)", filter: "blur(80px)", pointerEvents: "none" }}/>
+    <div style={{ position: "absolute", bottom: "15%", right: "10%", width: 250, height: 250, borderRadius: "50%", background: "rgb(var(--accent) / 0.05)", filter: "blur(60px)", pointerEvents: "none" }}/>
     {children}
   </div>
 );
 
 const ActionButton = ({ onClick, primary, children }) => (
   <button onClick={onClick} style={{
-    background: primary ? "#4F46E5" : "rgba(255,255,255,0.05)",
-    border: primary ? "none" : "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 10, padding: "10px 22px",
-    color: primary ? "#fff" : "rgba(255,255,255,0.6)",
-    fontSize: 14, fontWeight: primary ? 700 : 600,
-    cursor: "pointer", transition: "opacity 0.15s",
+    background: primary ? "rgb(var(--accent))" : "rgb(var(--bg-surface))",
+    border: primary ? "none" : "1px solid rgb(var(--border))",
+    borderRadius: 12, padding: "10px 22px",
+    color: primary ? "#fff" : "rgb(var(--text-heading))",
+    fontSize: 13, fontWeight: primary ? 700 : 600,
+    cursor: "pointer", transition: "all 0.15s",
   }}
     onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
     onMouseLeave={e => e.currentTarget.style.opacity = "1"}
@@ -43,17 +43,17 @@ export function NotFound() {
         {/* Big number */}
         <div style={{
           fontSize: 120, fontWeight: 900, lineHeight: 1,
-          color: "#6366F1",
+          color: "rgb(var(--accent))",
           marginBottom: 12,
           letterSpacing: "-0.04em",
         }}>
           404
         </div>
 
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 10, letterSpacing: "-0.02em" }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: "rgb(var(--text-heading))", marginBottom: 10, letterSpacing: "-0.02em" }}>
           Page not found
         </h1>
-        <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", marginBottom: 36, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, color: "rgb(var(--text-muted))", marginBottom: 36, lineHeight: 1.7 }}>
           The page you're looking for doesn't exist,<br/>may have been moved, or you don't have access.
         </p>
 
@@ -106,10 +106,10 @@ export function Forbidden() {
           403
         </div>
 
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 10, letterSpacing: "-0.02em" }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: "rgb(var(--text-heading))", marginBottom: 10, letterSpacing: "-0.02em" }}>
           Access Denied
         </h1>
-        <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", marginBottom: 36, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, color: "rgb(var(--text-muted))", marginBottom: 36, lineHeight: 1.7 }}>
           You don't have permission to view this page.<br/>
           Ask your workspace owner to grant you access.
         </p>

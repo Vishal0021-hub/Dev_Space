@@ -8,16 +8,11 @@ import NotificationBell from "../components/NotificationBell";
 import { DashboardSkeleton } from "../components/Skeletons";
 import StandupFeed from "../components/StandupFeed";
 import StandupHeatmap from "../components/StandupHeatmap";
+import StandupModal from "../components/StandupModal";
 import { getStoredUser } from "../utils/auth";
-import "../utils/collab.css";
+import { Mail, TrendingUp, CheckCircle, Flame, Plus, Briefcase, Users, Activity } from "lucide-react";
 
-/* ─── Icons ─────────────────────────────────────────────────── */
-const IconPlus       = ({ size=16 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
-const IconBriefcase  = ({ size=22 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>;
-const IconUsers      = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-const IconActivity   = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
-const IconLogoSmall  = () => <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M3 6l7-3 7 3v8l-7 3-7-3V6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>;
-
+/* ─── Role & Status Color Configs ────────────────────────────── */
 const ROLE_COLORS = {
   owner:  { bg: "rgba(251,191,36,0.15)",  color: "#fbbf24", label: "Owner"  },
   admin:  { bg: "rgba(99,102,241,0.15)",  color: "#818cf8", label: "Admin"  },
@@ -81,6 +76,7 @@ export default function Dashboard() {
   const [dashboard,     setDashboard]     = useState(null);
   const [loading,       setLoading]       = useState(false);
   const [isModalOpen,   setIsModalOpen]   = useState(false);
+  const [isStandupOpen, setIsStandupOpen] = useState(false);
   const [newWsName,     setNewWsName]     = useState("");
 
   const currentUser = getStoredUser();
@@ -88,8 +84,12 @@ export default function Dashboard() {
 
   /* Load dashboard when active workspace changes */
   useEffect(() => {
-    if (activeWorkspace?._id) fetchDashboard(activeWorkspace._id);
-  }, [activeWorkspace?._id]);
+    if (activeWorkspace?._id) {
+      fetchDashboard(activeWorkspace._id);
+    } else if (workspaces?.length > 0) {
+      setActiveWorkspace(workspaces[0]);
+    }
+  }, [activeWorkspace?._id, workspaces]);
 
   const fetchDashboard = async (wsId) => {
     setLoading(true);
@@ -109,11 +109,11 @@ export default function Dashboard() {
     if (!newWsName.trim()) return;
     const t = toast.loading("Creating workspace…");
     try {
-      const res = await API.post("/workspaces", { name: newWsName });
+      const res = await API.post("/workspaces", { name: newWsName.trim() });
       toast.success("Workspace created!", { id: t });
       setNewWsName("");
       setIsModalOpen(false);
-      refreshWorkspaces();
+      await refreshWorkspaces();
       setActiveWorkspace(res.data);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create", { id: t });
@@ -122,9 +122,9 @@ export default function Dashboard() {
 
   const tc = dashboard?.taskCounts || {};
   const total = tc.total || 0;
-  const pct = (n) => total ? Math.round((n / total) * 100) : 0;
+  const pct = (n) => total > 0 ? Math.round((n / total) * 100) : 0;
 
-  if (loading) return (
+  if (loading && !dashboard) return (
     <AppShell>
       <DashboardSkeleton />
     </AppShell>
@@ -132,98 +132,221 @@ export default function Dashboard() {
 
   return (
     <AppShell>
-      <div style={{ background: "#0F172A", minHeight: "100vh" }}>
+      <div className="bg-bg-canvas min-h-screen text-text-heading transition-colors select-none">
 
-        {/* ── Top bar ── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: "1px solid #1E293B", background: "#0F172A", position: "sticky", top: 0, zIndex: 10 }}>
-          <div>
-            <div style={{ fontSize: 11, color: "#64748B", fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              {activeWorkspace?.name || "Select a workspace"}
-            </div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#F1F5F9", margin: 0, fontFamily: "var(--font-display, Inter)" }}>Dashboard</h1>
+        {/* ── Sub-header matching prototype ── */}
+        <div className="px-6 py-2.5 border-b border-border bg-black/5 dark:bg-black/20 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 font-semibold">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="font-bold text-sm tracking-tight text-text-heading">
+              Workspace Telemetry & Standups
+            </span>
+            <span className="opacity-30">|</span>
+            <span className="text-text-muted text-xs">
+              {activeWorkspace?.name || "Workspace"} • Live Metrics
+            </span>
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <NotificationBell/>
-            {activeWorkspace && (
-              <Link to={`/projects/${activeWorkspace._id}`} style={{ background: "rgba(99,102,241,0.10)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: 10, padding: "8px 14px", color: "#818cf8", fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "all 0.2s" }}>
-                View Projects →
-              </Link>
-            )}
-            <button onClick={() => setIsModalOpen(true)} style={{ background: "#4F46E5", border: "none", borderRadius: 10, padding: "8px 14px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              <IconPlus size={14}/> New Workspace
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="btn-brand-accent px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
+            >
+              <Plus size={13} />
+              <span>New Workspace</span>
             </button>
           </div>
         </div>
 
-        {/* ── No workspace selected ── */}
-        {!activeWorkspace ? (
-          <div style={{ padding: 64, textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🚀</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: "#F1F5F9", marginBottom: 8 }}>Select a workspace to view your dashboard</div>
-            <div style={{ fontSize: 14, color: "#94A3B8", marginBottom: 24 }}>Choose from the sidebar, or create a new one to get started.</div>
-            <button onClick={() => setIsModalOpen(true)} style={{ background: "#4F46E5", border: "none", borderRadius: 12, padding: "12px 24px", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Create Workspace
-            </button>
-          </div>
-        ) : loading ? (
-          <div style={{ padding: 32, display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
-            {[1,2,3,4].map(i => <div key={i} style={{ height: 120, background: "#1E293B", borderRadius: 12, animation: "pulse 1.5s ease-in-out infinite", animationDelay: `${i*0.1}s` }}/>)}
-          </div>
-        ) : (
-          <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 28 }}>
+        {/* ── BENTO TELEMETRY HUB ── */}
+        <div className="p-6 max-w-6xl mx-auto space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-            {/* ── Task status cards ── */}
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 500, color: "#64748B", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>Task Summary</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
-                {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-                  <div key={key} style={{ background: "#1E293B", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 12, padding: "20px 20px", position: "relative", overflow: "hidden", transition: "border-color 0.2s" }}>
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: cfg.color, opacity: 0.7 }}/>
-                    <div style={{ fontSize: 28, fontWeight: 900, color: cfg.color, fontFamily: "var(--font-display, Figtree)", lineHeight: 1 }}>{tc[key] || 0}</div>
-                    <div style={{ fontSize: 11, fontWeight: 500, color: "#94A3B8", marginTop: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{cfg.label}</div>
-                    {total > 0 && (
-                      <div style={{ marginTop: 12, height: 4, background: "rgba(51,65,85,0.5)", borderRadius: 4, overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${pct(tc[key] || 0)}%`, background: cfg.color, borderRadius: 4, transition: "width 0.6s ease" }}/>
-                      </div>
-                    )}
-                    <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 4 }}>{pct(tc[key] || 0)}% of total</div>
-                  </div>
-                ))}
+            {/* 1. Velocity Engine Card (Dynamic Real Database Stats) */}
+            <div className="saas-card md:col-span-2 p-6 rounded-3xl flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider brand-accent-text">
+                    Sprint Velocity & Execution
+                  </span>
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/5 border border-border">
+                    {pct(tc.done || 0)}% Completed
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold mt-1 text-text-heading">
+                  {total > 0
+                    ? `${tc.done || 0} of ${total} Tasks Shipped`
+                    : "No Tasks Created Yet"}
+                </h3>
+                <p className="text-xs text-text-muted mt-0.5">
+                  {total > 0
+                    ? `${tc.inprogress || 0} in progress, ${tc.review || 0} in review, ${tc.todo || 0} remaining in backlog.`
+                    : "Create project boards and tasks to generate live sprint velocity telemetry."}
+                </p>
+              </div>
+
+              {/* Dynamic Proportional Bars */}
+              <div className="h-28 flex items-end gap-3 pt-4">
+                <div
+                  className="flex-1 bg-slate-500/20 rounded-xl transition-all duration-500 flex flex-col justify-end p-2"
+                  style={{ height: total > 0 ? `${Math.max(16, pct(tc.todo || 0))}%` : "30%" }}
+                  title={`To Do: ${tc.todo || 0} tasks (${pct(tc.todo || 0)}%)`}
+                >
+                  <span className="text-[10px] font-mono font-bold text-slate-400">{tc.todo || 0}</span>
+                </div>
+                <div
+                  className="flex-1 bg-amber-500/20 rounded-xl transition-all duration-500 flex flex-col justify-end p-2"
+                  style={{ height: total > 0 ? `${Math.max(16, pct(tc.inprogress || 0))}%` : "45%" }}
+                  title={`In Progress: ${tc.inprogress || 0} tasks (${pct(tc.inprogress || 0)}%)`}
+                >
+                  <span className="text-[10px] font-mono font-bold text-amber-500">{tc.inprogress || 0}</span>
+                </div>
+                <div
+                  className="flex-1 bg-indigo-500/20 rounded-xl transition-all duration-500 flex flex-col justify-end p-2"
+                  style={{ height: total > 0 ? `${Math.max(16, pct(tc.review || 0))}%` : "35%" }}
+                  title={`Review: ${tc.review || 0} tasks (${pct(tc.review || 0)}%)`}
+                >
+                  <span className="text-[10px] font-mono font-bold text-indigo-400">{tc.review || 0}</span>
+                </div>
+                <div
+                  className="flex-1 brand-accent-bg rounded-xl shadow-lg transition-all duration-500 flex flex-col justify-end p-2"
+                  style={{ height: total > 0 ? `${Math.max(16, pct(tc.done || 0))}%` : "60%" }}
+                  title={`Done: ${tc.done || 0} tasks (${pct(tc.done || 0)}%)`}
+                >
+                  <span className="text-[10px] font-mono font-bold" style={{ color: "var(--accent-contrast)" }}>{tc.done || 0}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between text-xs text-text-muted mt-3 font-mono">
+                <span>To Do</span>
+                <span>In Progress</span>
+                <span>Review</span>
+                <span className="brand-accent-text font-bold">Done (Shipped)</span>
               </div>
             </div>
 
-            {/* ── Daily Standup Feed ── */}
-            <StandupFeed
-              workspaceId={activeWorkspace._id}
-              currentUserId={currentUserId}
-            />
+            {/* 2. Standup Streak & Action Card */}
+            <div className="saas-card p-6 rounded-3xl flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                  Daily Team Standup
+                </span>
+                <h3 className="text-xl font-bold mt-1 text-text-heading">
+                  Async Standup
+                </h3>
+                <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                  Post what you accomplished, today's focus, and report blockers for sprint tracking.
+                </p>
+              </div>
 
-            {/* ── Standup Heatmap ── */}
-            <StandupHeatmap
-              workspaceId={activeWorkspace._id}
-              members={dashboard?.members || []}
-              currentUserId={currentUserId}
-            />
+              <div className="my-4 p-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-border">
+                <div className="flex items-center justify-between text-xs font-semibold mb-1">
+                  <span>Workspace Standup</span>
+                  <span className="text-emerald-500 font-mono text-[10px]">Active</span>
+                </div>
+                <p className="text-[11px] text-text-muted">
+                  Keep teammates aligned asynchronously without scheduling disruptive meetings.
+                </p>
+              </div>
 
-            {/* ── Body: Activity + Members + Channels ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
+              <button
+                onClick={() => setIsStandupOpen(true)}
+                className="w-full py-2.5 rounded-xl btn-brand-accent text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Post Daily Standup</span>
+              </button>
+            </div>
 
-              {/* Activity feed */}
-              <div style={{ background: "#1E293B", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 12, padding: "20px 24px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <IconActivity/>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "#F1F5F9" }}>Recent Activity</span>
+          </div>
+
+          {/* ── Status Breakdown Grid (Dynamic Real Counts) ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+              <div
+                key={key}
+                className="saas-card p-4 flex flex-col justify-between transition relative overflow-hidden group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-lg">{cfg.icon}</span>
+                  <span className="text-[10px] font-mono text-text-muted bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded-md border border-border">
+                    {total > 0 ? `${pct(tc[key] || 0)}%` : "0%"}
+                  </span>
+                </div>
+                <div>
+                  <div
+                    className="text-2xl font-extrabold group-hover:brand-accent-text transition text-text-heading"
+                  >
+                    {tc[key] || 0}
+                  </div>
+                  <div className="text-[11px] font-bold text-text-muted uppercase tracking-wider mt-0.5">
+                    {cfg.label}
+                  </div>
+                </div>
+                <div className="h-1.5 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden mt-3">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${total > 0 ? pct(tc[key] || 0) : 0}%`,
+                      backgroundColor: cfg.color,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Standup Feed & Heatmap (Real Dynamic Components) ── */}
+          {activeWorkspace?._id && (
+            <>
+              <StandupFeed
+                workspaceId={activeWorkspace._id}
+                currentUserId={currentUserId}
+              />
+              <StandupHeatmap
+                workspaceId={activeWorkspace._id}
+                members={dashboard?.members || []}
+                currentUserId={currentUserId}
+              />
+            </>
+          )}
+
+          {/* ── Body: Activity Stream + Members + Channels ── */}
+          {activeWorkspace?._id && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+              {/* Activity feed (Span 8) */}
+              <div className="lg:col-span-8 saas-card p-6 shadow-xs">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-text-muted" />
+                    <span className="text-sm font-bold text-text-heading">Activity Stream</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-text-muted">Live Workspace Events</span>
                 </div>
                 {!dashboard?.recentActivity?.length ? (
-                  <div style={{ fontSize: 13, color: "#64748B", padding: "20px 0", textAlign: "center" }}>No activity yet. Create tasks to get started!</div>
+                  <div className="text-xs text-text-muted py-10 text-center border border-dashed border-border rounded-2xl">
+                    No activity yet. Create tasks, projects, or invite teammates to get started!
+                  </div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  <div className="flex flex-col">
                     {dashboard.recentActivity.map((act, i) => (
-                      <div key={act._id || i} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: i < dashboard.recentActivity.length - 1 ? "1px solid #1E293B" : "none" }}>
-                        <div style={{ fontSize: 18, flexShrink: 0, lineHeight: 1 }}>{ACTIVITY_ICONS[act.type] || "📌"}</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, color: "#CBD5E1", lineHeight: 1.5 }}>{activityText(act)}</div>
-                          <div style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>{formatTime(act.createdAt)}</div>
+                      <div
+                        key={act._id || i}
+                        className={`flex items-start gap-3 py-3 ${
+                          i < dashboard.recentActivity.length - 1 ? "border-b border-border/50" : ""
+                        }`}
+                      >
+                        <span className="text-xl shrink-0 p-1.5 bg-bg-canvas border border-border rounded-xl">
+                          {ACTIVITY_ICONS[act.type] || "📌"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs text-text-heading leading-relaxed">
+                            {activityText(act)}
+                          </div>
+                          <div className="text-[10px] font-mono text-text-muted mt-1">
+                            {formatTime(act.createdAt)}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -231,30 +354,40 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* Right col: Members + Channels */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Sidebar stats (Span 4) */}
+              <div className="lg:col-span-4 flex flex-col gap-6">
 
-                {/* Members */}
-                <div style={{ background: "#1E293B", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 12, padding: "20px 20px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <IconUsers/>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: "#F1F5F9" }}>Team</span>
-                    <span style={{ marginLeft: "auto", fontSize: 12, color: "#64748B" }}>{dashboard?.members?.length || 0} members</span>
+                {/* Team members */}
+                <div className="saas-card p-6 shadow-xs">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-text-muted" />
+                      <span className="text-sm font-bold text-text-heading">Team</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-text-muted">
+                      {dashboard?.members?.length || 0} members
+                    </span>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {(dashboard?.members || []).map(m => {
-                      const roleStyle = ROLE_COLORS[m.role] || ROLE_COLORS.member;
+
+                  <div className="flex flex-col gap-2">
+                    {(dashboard?.members || []).slice(0, 5).map(m => {
+                      const role = ROLE_COLORS[m.role] || ROLE_COLORS.member;
                       return (
-                        <div key={m._id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#312E81", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#C7D2FE", flexShrink: 0 }}>
-                            {(m.name || "U")[0].toUpperCase()}
+                        <div key={m._id} className="flex items-center justify-between p-2 rounded-xl hover:bg-bg-canvas transition">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-accent/20 border border-border text-accent font-bold text-xs flex items-center justify-center ring-2 ring-bg-surface">
+                              {(m.name || "U")[0].toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-text-heading">{m.name || "Unknown"}</div>
+                              <div className="text-[10px] text-text-muted">{m.email || ""}</div>
+                            </div>
                           </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: "#F1F5F9", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
-                            <div style={{ fontSize: 11, color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.email}</div>
-                          </div>
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: roleStyle.bg, color: roleStyle.color, flexShrink: 0, letterSpacing: "0.04em" }}>
-                            {roleStyle.label}
+                          <span
+                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                            style={{ background: role.bg, color: role.color }}
+                          >
+                            {role.label}
                           </span>
                         </div>
                       );
@@ -262,58 +395,98 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Channels */}
-                <div style={{ background: "#1E293B", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 12, padding: "20px 20px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <IconLogoSmall/>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: "#F1F5F9" }}>Channels</span>
-                    <span style={{ marginLeft: "auto", fontSize: 12, color: "#64748B" }}>{dashboard?.channels?.length || 0}</span>
+                {/* Channels quick list */}
+                <div className="saas-card p-6 shadow-xs">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-bold text-text-heading">Channels</span>
+                    <span className="text-[10px] font-mono text-text-muted">
+                      {dashboard?.channels?.length || 0} total
+                    </span>
                   </div>
-                  {(!dashboard?.channels || dashboard.channels.length === 0) ? (
-                    <div style={{ fontSize: 12, color: "#64748B", textAlign: "center", padding: "8px 0" }}>No channels yet — create one from the sidebar</div>
+                  {!dashboard?.channels?.length ? (
+                    <div className="text-xs text-text-muted py-4 text-center">No channels yet</div>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      {dashboard.channels.map(ch => (
-                        <Link key={ch._id} to={`/channels/${ch._id}?workspaceId=${activeWorkspace._id}`}
-                          style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#94A3B8", textDecoration: "none", padding: "6px 8px", borderRadius: 8, transition: "all 0.15s" }}
-                          onMouseEnter={e => e.currentTarget.style.background = "#253448"}
-                          onMouseLeave={e => e.currentTarget.style.background = "none"}
+                    <div className="flex flex-col gap-1">
+                      {dashboard.channels.map(c => (
+                        <Link
+                          key={c._id}
+                          to={`/channels/${c._id}?workspaceId=${activeWorkspace._id}`}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-text-heading hover:bg-bg-canvas no-underline transition"
                         >
-                          <span style={{ color: "#64748B", fontSize: 14 }}>#</span> {ch.name}
-                          {ch.isPrivate && <span style={{ fontSize: 10, color: "#fbbf24", marginLeft: "auto" }}>private</span>}
+                          <span className="text-text-muted font-bold">#</span>
+                          <span className="font-semibold truncate">{c.name}</span>
+                          {c.isPrivate && (
+                            <span className="text-[10px] text-amber-500 ml-auto bg-amber-500/10 px-1.5 py-0.5 rounded">
+                              private
+                            </span>
+                          )}
                         </Link>
                       ))}
                     </div>
                   )}
                 </div>
+
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+        </div>
 
         {/* ── Create Workspace Modal ── */}
         {isModalOpen && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }} onClick={() => setIsModalOpen(false)}>
-            <div style={{ background: "#1E293B", border: "1px solid #334155", borderRadius: 20, padding: 32, width: 400, boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#F1F5F9", marginBottom: 6, fontFamily: "var(--font-display, Inter)" }}>New Workspace</div>
-              <p style={{ fontSize: 13, color: "#94A3B8", marginBottom: 24 }}>Give your team environment a memorable name.</p>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-150"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <div
+              className="saas-card p-7 w-full max-w-sm shadow-2xl text-text-heading animate-in zoom-in-95 duration-150"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="text-lg font-bold text-text-heading mb-1">New Workspace</div>
+              <p className="text-xs text-text-muted mb-5">Give your team environment a memorable name.</p>
               <form onSubmit={createWorkspace}>
-                <label style={{ fontSize: 11, fontWeight: 500, color: "#64748B", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.1em" }}>Workspace name</label>
+                <label className="text-[11px] font-bold text-text-muted block mb-1.5 uppercase tracking-wider">
+                  Workspace name
+                </label>
                 <input
-                  autoFocus value={newWsName} onChange={e => setNewWsName(e.target.value)}
-                  placeholder="e.g. Acme Studio…"
-                  style={{ width: "100%", background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: "10px 14px", color: "#F1F5F9", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 20 }}
+                  autoFocus
+                  value={newWsName}
+                  onChange={e => setNewWsName(e.target.value)}
+                  placeholder="e.g. Engineering Space…"
+                  className="w-full bg-bg-canvas border border-border rounded-xl px-3.5 py-2.5 text-text-heading placeholder-text-muted/50 text-sm outline-none mb-5 focus:border-accent transition"
                 />
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                  <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "1px solid #334155", borderRadius: 10, padding: "8px 16px", color: "#94A3B8", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Cancel</button>
-                  <button type="submit" style={{ background: "#4F46E5", border: "none", borderRadius: 10, padding: "8px 20px", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Create →</button>
+                <div className="flex gap-2.5 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="bg-transparent border border-border rounded-xl px-4 py-2 text-text-muted hover:text-text-heading cursor-pointer text-xs font-semibold transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-brand-accent rounded-xl px-5 py-2 cursor-pointer text-xs font-bold transition shadow-sm"
+                  >
+                    Create →
+                  </button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
+        {/* ── Standup Modal ── */}
+        {isStandupOpen && activeWorkspace?._id && (
+          <StandupModal
+            workspaceId={activeWorkspace._id}
+            onClose={() => setIsStandupOpen(false)}
+            onSuccess={() => {
+              setIsStandupOpen(false);
+              fetchDashboard(activeWorkspace._id);
+            }}
+          />
+        )}
+
       </div>
     </AppShell>
   );
