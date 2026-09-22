@@ -7,15 +7,15 @@ import API from "../services/api";
 
 /* ── Design tokens ─────────────────────────────────────────── */
 const C = {
-  bgBase: "rgb(var(--bg-canvas))",
-  bgCard: "rgb(var(--bg-surface))",
-  bgElevated: "rgb(var(--bg-surface-elevated))",
-  border: "rgb(var(--border))",
-  textPrimary: "rgb(var(--text-heading))",
-  textSecondary: "rgb(var(--text-body))",
-  textMuted: "rgb(var(--text-muted))",
-  accent: "rgb(var(--accent))",
-  accentHover: "rgb(var(--accent-hover))",
+  bgBase: "var(--bg-canvas)",
+  bgCard: "var(--bg-surface)",
+  bgElevated: "var(--bg-surface-elevated)",
+  border: "var(--border)",
+  textPrimary: "var(--text-heading)",
+  textSecondary: "var(--text-body)",
+  textMuted: "var(--text-muted)",
+  accent: "var(--accent)",
+  accentHover: "var(--accent-hover)",
 };
 
 /* ── Toolbar button ────────────────────────────────────────── */
@@ -25,13 +25,13 @@ const ToolbarBtn = ({ active, onClick, children, title }) => (
     onClick={onClick}
     title={title}
     style={{
-      background: active ? "rgb(var(--accent) / 0.15)" : "transparent",
-      color: active ? "rgb(var(--accent))" : C.textSecondary,
+      background: active ? "color-mix(in srgb, var(--accent) 15%, transparent)" : "transparent",
+      color: active ? "var(--accent)" : C.textSecondary,
       border: "none", borderRadius: 8, padding: "5px 9px",
       cursor: "pointer", fontSize: 13, fontWeight: 600,
       transition: "all 0.15s", display: "flex", alignItems: "center",
     }}
-    onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "rgb(var(--border) / 0.4)"; }}
+    onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "color-mix(in srgb, var(--border) 40%, transparent)"; }}
     onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
   >
     {children}
@@ -268,9 +268,9 @@ const MeetingEditor = forwardRef(function MeetingEditor({ content, onChange, wor
           color: ${C.textSecondary};
         }
         .tiptap code {
-          background: rgb(var(--accent) / 0.12);
+          background: color-mix(in srgb, var(--accent) 12%, transparent);
           border-radius: 4px; padding: 1px 5px;
-          font-size: 13px; color: ${C.accent};
+          font-size: 13px; color: var(--accent);
         }
         .tiptap .is-editor-empty:first-child::before {
           content: attr(data-placeholder);
@@ -280,8 +280,8 @@ const MeetingEditor = forwardRef(function MeetingEditor({ content, onChange, wor
           height: 0;
         }
         .mention-chip {
-          background: rgb(var(--accent) / 0.15);
-          color: ${C.accent};
+          background: color-mix(in srgb, var(--accent) 15%, transparent);
+          color: var(--accent);
           border-radius: 6px;
           padding: 2px 6px;
           font-weight: 600;

@@ -5,20 +5,18 @@ import API from "../services/api";
 import { useWorkspace } from "../context/WorkspaceContext";
 import AppShell from "../components/AppShell";
 import MeetingEditor from "../components/MeetingEditor";
-import "../utils/collab.css";
-
 /* ── Design tokens ─────────────────────────────────────────── */
 const C = {
-  bgBase: "rgb(var(--bg-canvas))",
-  bgCard: "rgb(var(--bg-surface))",
-  bgElevated: "rgb(var(--bg-surface-elevated))",
-  border: "rgb(var(--border))",
-  borderSubtle: "rgb(var(--border))",
-  textPrimary: "rgb(var(--text-heading))",
-  textSecondary: "rgb(var(--text-body))",
-  textMuted: "rgb(var(--text-muted))",
-  accent: "rgb(var(--accent))",
-  accentHover: "rgb(var(--accent-hover))",
+  bgBase: "var(--bg-canvas)",
+  bgCard: "var(--bg-surface)",
+  bgElevated: "var(--bg-surface-elevated)",
+  border: "var(--border)",
+  borderSubtle: "var(--border)",
+  textPrimary: "var(--text-heading)",
+  textSecondary: "var(--text-body)",
+  textMuted: "var(--text-muted)",
+  accent: "var(--accent)",
+  accentHover: "var(--accent-hover)",
 };
 
 /* ── Icons ─────────────────────────────────────────────────── */
@@ -111,42 +109,55 @@ export default function MeetingNotes() {
 
   return (
     <AppShell>
-      <div className="flex-1 flex flex-col overflow-hidden bg-bg-canvas">
+      <div className="flex-1 flex flex-col min-h-[calc(100vh-4rem)] bg-bg-canvas text-text-heading select-none">
         {/* ── Top bar ── */}
-        <div className="px-7 py-4 flex items-center justify-between border-b border-border bg-bg-surface/50 backdrop-blur-md">
+        <div className="px-4 sm:px-7 py-3.5 sm:py-4 flex items-center justify-between border-b border-border bg-bg-surface/50 backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <span className="text-xl">📝</span>
-            <h1 className="text-lg font-bold text-text-heading tracking-tight">Meeting Notes</h1>
-            <span className="text-xs font-semibold text-accent bg-accent/10 px-2.5 py-0.5 rounded-full border border-accent/20">
-              {meetings.length}
-            </span>
+            <div className="w-8 h-8 rounded-xl bg-accent/15 text-accent flex items-center justify-center font-bold">
+              <IconCalendar size={18} />
+            </div>
+            <div>
+              <h1 className="text-base sm:text-lg font-bold text-text-heading tracking-tight flex items-center gap-2">
+                <span>Meeting Notes</span>
+                <span className="text-xs font-semibold text-accent bg-accent/10 px-2.5 py-0.5 rounded-full border border-accent/20">
+                  {meetings.length}
+                </span>
+              </h1>
+            </div>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm cursor-pointer"
+            className="btn-brand-accent flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm cursor-pointer"
           >
-            <IconPlus size={14} /> New Meeting
+            <IconPlus size={14} /> <span>New Meeting</span>
           </button>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
           {/* ── Meeting list (left panel) ── */}
-          <div className={`${selectedMeeting ? "w-80 min-w-[320px] border-r border-border" : "w-full"} overflow-y-auto p-4 transition-all`}>
+          <div className={`${selectedMeeting ? "w-80 min-w-[320px] border-r border-border" : "w-full"} flex flex-col flex-1 overflow-y-auto p-4 transition-all`}>
             {loading ? (
-              <div className="text-center py-12 text-sm text-text-muted">Loading meetings…</div>
+              <div className="text-center py-16 text-sm text-text-muted">Loading meetings…</div>
             ) : meetings.length === 0 ? (
-              <div className="text-center py-16 px-6 max-w-sm mx-auto">
-                <div className="text-4xl mb-3">📝</div>
-                <div className="text-base font-bold text-text-heading mb-1.5">No meeting notes yet</div>
-                <p className="text-xs text-text-muted mb-6 leading-relaxed">
-                  Record decisions, action items, and link tasks with real-time collaboration.
-                </p>
-                <button
-                  onClick={() => setShowCreate(true)}
-                  className="bg-accent hover:bg-accent-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow cursor-pointer"
-                >
-                  Create Meeting Note
-                </button>
+              <div className="flex-1 flex items-center justify-center p-4 sm:p-8 min-h-[50vh]">
+                <div className="saas-card p-8 sm:p-12 text-center max-w-md w-full mx-auto flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-3xl bg-accent/15 flex items-center justify-center text-accent shadow-sm">
+                    <IconCalendar size={28} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-text-heading">No Meeting Notes Yet</h3>
+                    <p className="text-xs text-text-muted mt-1 leading-relaxed max-w-xs mx-auto">
+                      Record sprint decisions, retrospective action items, and link tasks with real-time collaboration.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCreate(true)}
+                    className="btn-brand-accent px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer shadow-md mt-1"
+                  >
+                    <IconPlus size={14} />
+                    <span>Create Meeting Note</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col gap-2.5">

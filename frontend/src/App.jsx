@@ -4,7 +4,6 @@ import { useState, useEffect, lazy, Suspense } from "react";
 
 // Error pages & static lightweight elements
 import { NotFound, Forbidden, OfflineBanner } from "./pages/ErrorPages";
-import CustomCursor  from "./components/CustomCursor";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PageLoader    from "./components/PageLoader";
 
@@ -84,8 +83,6 @@ function App() {
               },
             }}
           />
-
-          <CustomCursor />
 
           {/* ── Global Search overlay (Cmd+K) ── */}
           {searchOpen && (
