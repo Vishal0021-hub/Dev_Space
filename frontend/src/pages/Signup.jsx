@@ -1,20 +1,26 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import API from "../services/api"
-import "../utils/signup.css"
-const floatingParticles = Array.from({ length: 14 }, (_, i) => ({
-  id: i,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: Math.random() * 3 + 1,
-  delay: Math.random() * 6,
-  duration: Math.random() * 8 + 6,
-}));
-
 import { toast } from "react-hot-toast";
+import { 
+  User, 
+  Mail, 
+  Lock, 
+  ArrowRight, 
+  Sun, 
+  Moon, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Activity,
+  Zap
+} from "lucide-react";
+import API from "../services/api";
+import { useTheme, THEMES } from "../context/ThemeContext";
+import "../utils/Auth.css";
 
-function Signup() {
+export default function Signup() {
   const navigate = useNavigate();
+  const { theme, setTheme, isDark } = useTheme();
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -27,13 +33,14 @@ function Signup() {
     setForm((f) => ({ ...f, [field]: e.target.value }));
   };
 
-  const handleSignup = async () => {
+  const handleSignup = async (e) => {
+    if (e) e.preventDefault();
     try {
       if (!form.firstName.trim()) {
         return toast.error("Please enter your first name");
       }
 
-      // Gmail-only restriction (front-end fast-fail)
+      // Gmail restriction (front-end fast-fail)
       if (!form.email || !/^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(form.email)) {
         return toast.error("Only Gmail accounts (@gmail.com) are allowed to sign up");
       }
@@ -49,7 +56,8 @@ function Signup() {
 
       const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
 
-      const loadingToast = toast.loading("Creating account...");
+      setLoading(true);
+      const loadingToast = toast.loading("Creating DevSpace account...");
       await API.post("/auth/register", {
         name: fullName,
         email: form.email,
@@ -57,166 +65,238 @@ function Signup() {
       });
 
       toast.success("Account created! Redirecting to login…", { id: loadingToast });
-
       setTimeout(() => {
         navigate("/login");
-      }, 1500);
+      }, 1200);
 
     } catch (err) {
-      console.log(err.response?.data);
       toast.error(err.response?.data?.message || "Signup Failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="dc-page">
-   
-
-      <div className="su-root">
-        {/* ── FORM (left column in grid) ── */}
-        <div className="su-right">
-          <div className="su-form-wrap">
-            <div className="su-logo-row">
-              <div className="su-logo-icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M3 6l7-3 7 3v8l-7 3-7-3V6z" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" />
-                  <path d="M3 6l7 3m0 8V9m7-3l-7 3" stroke="#fff" strokeWidth="1.5" />
-                </svg>
-              </div>
-              <span className="su-logo-text">DevCollab</span>
-            </div>
-
-            {/* Stepper */}
-            
-            
-            
-
-              <>
-                <h2 className="su-form-title">Create your account</h2>
-                <p className="su-form-sub">
-                  Already have one? <Link to="/login">Login →</Link>
-                </p>
-
-                <div className="su-grid2">
-                  <div className="su-field">
-                    <label className="su-label">First name</label>
-                    <div className="su-input-wrap">
-                      <svg className="su-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                      </svg>
-                      <input type="text" placeholder="Alex" className="su-input" onChange={set("firstName")} />
-                    </div>
-                  </div>
-                  <div className="su-field">
-                    <label className="su-label">Last name</label>
-                    <div className="su-input-wrap">
-                      <svg className="su-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                      </svg>
-                      <input type="text" placeholder="Rivera" className="su-input" onChange={set("lastName")} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="su-field">
-                  <label className="su-label">Work email</label>
-                  <div className="su-input-wrap">
-                    <svg className="su-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="2" y="4" width="20" height="16" rx="2" /><path d="M2 8l10 6 10-6" />
-                    </svg>
-                    <input type="email" placeholder="yourname@gmail.com" className="su-input" onChange={set("email")} />
-                  </div>
-                </div>
-
-                <div className="su-field">
-                  <label className="su-label">Password</label>
-                  <div className="su-input-wrap">
-                    <svg className="su-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                    <input type="password" placeholder="Min. 8 characters" className="su-input" onChange={set("password")} />
-                  </div>
-                </div>
-
-                <div className="su-field">
-              <label className="su-label">Confirm Password</label>
-             <div className="su-input-wrap">
-                     <input
-                 type="password"
-               placeholder="Confirm password"
-               className="su-input"
-                  onChange={set("confirm")}
-                  />
-            </div>
-            </div>
-
-                <button className="su-btn" onClick={handleSignup}>
-                  Sign Up →
-                </button>
-              </>
+    <div className="auth-page auth-grid-pattern">
+      
+      {/* ── Top Navigation Bar ── */}
+      <header className="auth-nav">
+        <Link to="/" className="flex items-center gap-2.5 text-inherit no-underline">
+          <div className="w-8 h-8 rounded-xl btn-brand-accent flex items-center justify-center font-black text-xs font-mono shadow-md">
+            DS
           </div>
+          <span className="font-extrabold text-base sm:text-lg tracking-tight">DevSpace</span>
+        </Link>
+
+        {/* Right Actions: Theme Toggle & Link to Login */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center bg-black/5 dark:bg-white/5 border border-inherit p-1 rounded-2xl gap-1">
+            <button
+              type="button"
+              onClick={() => setTheme(THEMES.DAYLIGHT)}
+              className={`px-2 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                !isDark 
+                  ? "bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm" 
+                  : "opacity-60 hover:opacity-100"
+              }`}
+              title="Switch to Daylight Light"
+            >
+              <Sun className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline">Daylight</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTheme(THEMES.WARM_DARK)}
+              className={`px-2 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                isDark 
+                  ? "brand-accent-text bg-amber-500/15 border border-amber-500/30 shadow-sm" 
+                  : "opacity-60 hover:opacity-100"
+              }`}
+              title="Switch to HeroUI Warm Dark"
+            >
+              <Moon className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Warm Dark</span>
+            </button>
+          </div>
+
+          <Link to="/login" className="text-xs font-semibold hover:opacity-80 transition text-inherit no-underline hidden sm:inline">
+            Sign in instead →
+          </Link>
         </div>
+      </header>
 
-        {/* ── ILLUSTRATION (right column in grid) ── */}
-        <div className="su-left">
-          <div className="su-grid-overlay" />
-          {floatingParticles.map((p) => (
-            <div
-              key={p.id}
-              className="su-particle"
-              style={{
-                left: `${p.x}%`,
-                top: `${p.y}%`,
-                width: p.size,
-                height: p.size,
-                "--dur": `${p.duration}s`,
-                "--delay": `${p.delay}s`,
-              }}
-            />
-          ))}
-
-          <div className="su-stats">
-            {[
-              { icon: "👥", num: "12K+",  label: "Active developers",  bg: "rgba(99,102,241,0.1)"  },
-              { icon: "⚡", num: "98ms",   label: "Avg. sync latency",   bg: "rgba(251,191,36,0.08)" },
-              { icon: "🚀", num: "340K+",  label: "Sessions launched",   bg: "rgba(52,211,153,0.08)" },
-              { icon: "🛡️", num: "99.9%",  label: "Uptime guaranteed",   bg: "rgba(244,63,94,0.08)"  },
-            ].map((s) => (
-              <div className="su-stat-card" key={s.label}>
-                <div className="su-stat-icon" style={{ background: s.bg }}>
-                  <span style={{ fontSize: 16 }}>{s.icon}</span>
-                </div>
-                <div className="su-stat-number"><span>{s.num}</span></div>
-                <div className="su-stat-label">{s.label}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="su-testimonial">
-            <div className="su-quote">
-              DevCollab cut our code-review cycle from two days to two hours.
-              It's the missing piece every remote team needs.
-            </div>
-            <div className="su-reviewer">
-              <div className="su-reviewer-avatar">M</div>
-              <div>
-                <div className="su-reviewer-name">Maya Chen</div>
-                <div className="su-reviewer-role">Engineering Lead · Stripe</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="su-tagline">
-            <h2>Join thousands of<br /><span>elite dev teams.</span></h2>
-            <p>
-              From solo hackers to enterprise squads — DevCollab scales with you,
-              keeping everyone in sync without the noise.
+      {/* ── Main Auth Area ── */}
+      <main className="auth-main">
+        <div className="auth-split-grid">
+          
+          {/* ── FORM CARD (Left / Center on Mobile) ── */}
+          <div className="auth-card">
+            <h1 className="auth-title">Create your account</h1>
+            <p className="auth-subtitle">
+              Already have an account?{" "}
+              <Link to="/login" className="brand-accent-text font-semibold hover:underline">
+                Sign in →
+              </Link>
             </p>
+
+            <form onSubmit={handleSignup}>
+              {/* Name Fields (2 Columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="auth-field">
+                  <label className="auth-label">First name</label>
+                  <div className="auth-input-wrap">
+                    <User className="auth-input-icon" />
+                    <input
+                      type="text"
+                      placeholder="Alex"
+                      className="auth-input"
+                      value={form.firstName}
+                      onChange={set("firstName")}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="auth-field">
+                  <label className="auth-label">Last name</label>
+                  <div className="auth-input-wrap">
+                    <User className="auth-input-icon" />
+                    <input
+                      type="text"
+                      placeholder="Rivera"
+                      className="auth-input"
+                      value={form.lastName}
+                      onChange={set("lastName")}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Work Email Field */}
+              <div className="auth-field">
+                <label className="auth-label">Gmail address</label>
+                <div className="auth-input-wrap">
+                  <Mail className="auth-input-icon" />
+                  <input
+                    type="email"
+                    placeholder="yourname@gmail.com"
+                    className="auth-input"
+                    value={form.email}
+                    onChange={set("email")}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="auth-field">
+                <label className="auth-label">Password</label>
+                <div className="auth-input-wrap">
+                  <Lock className="auth-input-icon" />
+                  <input
+                    type="password"
+                    placeholder="Min. 8 characters (1 uppercase, 1 number)"
+                    className="auth-input"
+                    value={form.password}
+                    onChange={set("password")}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Confirm Password Field */}
+              <div className="auth-field">
+                <label className="auth-label">Confirm Password</label>
+                <div className="auth-input-wrap">
+                  <Lock className="auth-input-icon" />
+                  <input
+                    type="password"
+                    placeholder="Re-enter password"
+                    className="auth-input"
+                    value={form.confirm}
+                    onChange={set("confirm")}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button 
+                type="submit" 
+                className="auth-submit-btn btn-brand-accent shadow-md"
+                disabled={loading}
+              >
+                <span>{loading ? "Creating account..." : "Create DevSpace Account"}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+
+            <div className="auth-footer">
+              By registering you agree to our <a href="/terms" className="text-inherit underline">Terms of Service</a> &amp; <a href="/privacy" className="text-inherit underline">Privacy Policy</a>
+            </div>
           </div>
+
+          {/* ── SHOWCASE SIDE (Right - Desktop Only, Professional SaaS) ── */}
+          <div className="auth-showcase-panel">
+            
+            {/* Live Telemetry Card */}
+            <div className="auth-telemetry-box">
+              <div className="flex items-center justify-between pb-3 border-b border-inherit mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-dot"></span>
+                  <span className="text-xs font-bold font-mono">DevSpace Platform</span>
+                </div>
+                <span className="text-[11px] opacity-60 font-mono">Real-Time MERN</span>
+              </div>
+
+              <div className="space-y-3 font-sans">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold">End-to-End Sprint Cockpit</div>
+                    <div className="text-[11px] opacity-70">Task dependencies, urgent priorities, and blocker flags.</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <Activity className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold">14-Day Standup Streak Heatmaps</div>
+                    <div className="text-[11px] opacity-70">Automated daily check-ins that keep asynchronous teams connected.</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <Zap className="w-4 h-4 text-sky-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold">Sub-15ms WebSocket Broadcasts</div>
+                    <div className="text-[11px] opacity-70">Zero lag Kanban reordering, instant channel messaging & presence.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-inherit flex items-center justify-between text-[11px] opacity-65">
+                <span>⚡ Instant Team Invitation</span>
+                <span className="font-mono">Free Forever Workspace</span>
+              </div>
+            </div>
+
+            {/* Micro Badge */}
+            <div className="p-3 rounded-xl bg-black/5 dark:bg-white/5 border border-inherit text-xs flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 brand-accent-text" />
+                <span className="font-semibold">Bespoke Dual Themes</span>
+              </div>
+              <span className="opacity-60 text-[11px]">Daylight Clean Light ☀️ &amp; HeroUI Warm Dark 🌙</span>
+            </div>
+
+          </div>
+
         </div>
-      </div>
+      </main>
+
     </div>
   );
 }
-
-export default Signup;
