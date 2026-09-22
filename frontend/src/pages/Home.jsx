@@ -1,501 +1,392 @@
-import { useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import * as THREE from "three";
+import toast from "react-hot-toast";
+import { 
+  ArrowRight, 
+  Terminal, 
+  Kanban, 
+  Calendar, 
+  MessageSquare, 
+  FileText, 
+  Sun, 
+  Moon, 
+  Zap, 
+  CheckCircle2, 
+  Command, 
+  Users,
+  Activity
+} from "lucide-react";
+import { useTheme, THEMES } from "../context/ThemeContext";
 import "../utils/Home.css";
 
-/* ─── Inline SVG icons ─────────────────────────────────── */
-const IconLogo = () => (
-  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-    <path d="M3 6l7-3 7 3v8l-7 3-7-3V6z" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round"/>
-    <path d="M3 6l7 3m0 8V9m7-3l-7 3" stroke="#fff" strokeWidth="1.5"/>
-  </svg>
-);
-const IconArrow = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <line x1="5" y1="12" x2="19" y2="12"/>
-    <polyline points="12 5 19 12 12 19"/>
-  </svg>
-);
-const IconPlay = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-    <polygon points="5 3 19 12 5 21 5 3"/>
-  </svg>
-);
-
-/* ─── Feature data ─────────────────────────────────────── */
-const FEATURES = [
-  {
-    icon: "⚡",
-    name: "Real-Time Sync",
-    desc: "Every keystroke, every cursor — synced across your team in under 20ms. Zero lag, zero friction.",
-  },
-  {
-    icon: "🔀",
-    name: "Live Collaboration",
-    desc: "See exactly who's editing what, with live cursors and presence indicators across any project.",
-  },
-  {
-    icon: "🛡️",
-    name: "Role-Based Access",
-    desc: "Fine-grained permissions per workspace, project, or file. Your code, your rules.",
-  },
-  {
-    icon: "🔗",
-    name: "Smart Integrations",
-    desc: "Connect GitHub, Slack, Jira and more. DevCollab lives where your workflow already is.",
-  },
-  {
-    icon: "🧠",
-    name: "AI Code Review",
-    desc: "Inline suggestions, auto-refactoring hints, and smart comments powered by your team's patterns.",
-  },
-  {
-    icon: "🌐",
-    name: "Edge-Deployed",
-    desc: "Servers in 40+ regions. Sub-50ms latency no matter where your team is in the world.",
-  },
-];
-
-/* ─── Component ────────────────────────────────────────── */
 export default function Home() {
-  const canvasRef    = useRef(null);
-  const hero3dRef    = useRef(null);
-  const mousePos     = useRef({ x: 0, y: 0 });
-  const targetTilt   = useRef({ x: 0, y: 0 });
-  const currentTilt  = useRef({ x: 0, y: 0 });
+  const { theme, setTheme, isDark } = useTheme();
+  const terminalLogRef = useRef(null);
 
-  /* ── Three.js animated background ── */
+  // Initial Terminal Log Stream
+  const [logs, setLogs] = useState([
+    { type: "info", text: "// DevSpace interactive command stream initialized" },
+    { type: "cmd", text: "$ devspace sprint status --health" },
+    { type: "ok", text: "✓ Sprint 42: Active (82% complete · 28 of 34 story points shipped)" },
+    { type: "ok", text: "✓ Socket.IO Broadcast: 4 peers online, sub-15ms sync active" },
+    { type: "warn", text: "! 1 Blocker flagged on task #DES-102 (resolved in PR #91)" },
+  ]);
+
+  // Scroll terminal to bottom on new logs
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x000000, 0);
-
-    const scene  = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.z = 28;
-
-    /* ── Particle field ── */
-    const PARTICLE_COUNT = 1800;
-    const positions = new Float32Array(PARTICLE_COUNT * 3);
-    const colors    = new Float32Array(PARTICLE_COUNT * 3);
-    const sizes     = new Float32Array(PARTICLE_COUNT);
-
-    const palette = [
-      new THREE.Color(0x5b5ef4), // indigo
-      new THREE.Color(0x8857e9), // violet
-      new THREE.Color(0x22d3ee), // cyan
-      new THREE.Color(0x1e1b4b), // deep indigo
-    ];
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const r = 22 + Math.random() * 18;
-      const theta = Math.random() * Math.PI * 2;
-      const phi   = Math.acos(2 * Math.random() - 1);
-
-      positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      positions[i * 3 + 2] = r * Math.cos(phi);
-
-      const c = palette[Math.floor(Math.random() * palette.length)];
-      colors[i * 3]     = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
-
-      sizes[i] = Math.random() * 2.2 + 0.4;
+    if (terminalLogRef.current) {
+      terminalLogRef.current.scrollTop = terminalLogRef.current.scrollHeight;
     }
+  }, [logs]);
 
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute("color",    new THREE.BufferAttribute(colors, 3));
-    geo.setAttribute("size",     new THREE.BufferAttribute(sizes, 1));
-
-    const mat = new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 }, uMouse: { value: new THREE.Vector2() } },
-      vertexShader: `
-        attribute float size;
-        attribute vec3 color;
-        varying vec3 vColor;
-        uniform float uTime;
-        void main() {
-          vColor = color;
-          vec3 pos = position;
-          float wave = sin(uTime * 0.4 + pos.x * 0.08) * 0.6
-                     + cos(uTime * 0.3 + pos.y * 0.06) * 0.4;
-          pos.z += wave;
-          vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-          gl_Position  = projectionMatrix * mvPos;
-          gl_PointSize = size * (260.0 / -mvPos.z);
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vColor;
-        void main() {
-          float d = distance(gl_PointCoord, vec2(0.5));
-          if (d > 0.5) discard;
-          float alpha = smoothstep(0.5, 0.1, d) * 0.75;
-          gl_FragColor = vec4(vColor, alpha);
-        }
-      `,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      vertexColors: true,
-    });
-
-    const particles = new THREE.Points(geo, mat);
-    scene.add(particles);
-
-    /* ── Glowing inner sphere ── */
-    const sphereGeo = new THREE.SphereGeometry(4, 48, 48);
-    const sphereMat = new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 } },
-      vertexShader: `
-        varying vec3 vNormal;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vNormal;
-        uniform float uTime;
-        void main() {
-          float rim = pow(1.0 - abs(dot(vNormal, vec3(0,0,1))), 2.8);
-          vec3 col1 = vec3(0.36, 0.37, 0.96); // indigo
-          vec3 col2 = vec3(0.53, 0.34, 0.91); // violet
-          vec3 c = mix(col1, col2, 0.5 + 0.5 * sin(uTime * 0.7));
-          gl_FragColor = vec4(c * rim * 0.55, rim * 0.18);
-        }
-      `,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.FrontSide,
-    });
-    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-    sphere.position.set(0, 0, 0);
-    scene.add(sphere);
-
-    /* ── Wireframe icosahedron ── */
-    const icoGeo  = new THREE.IcosahedronGeometry(6, 1);
-    const icoMat  = new THREE.MeshBasicMaterial({
-      color: 0x5b5ef4, wireframe: true, transparent: true, opacity: 0.06,
-    });
-    const ico = new THREE.Mesh(icoGeo, icoMat);
-    scene.add(ico);
-
-    /* ── Resize ── */
-    const onResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-    window.addEventListener("resize", onResize);
-
-    /* ── Mouse ── */
-    const onMouse = (e) => {
-      mat.uniforms.uMouse.value.set(
-        (e.clientX / window.innerWidth)  * 2 - 1,
-       -(e.clientY / window.innerHeight) * 2 + 1,
-      );
-      mousePos.current = { x: e.clientX, y: e.clientY };
-    };
-    window.addEventListener("mousemove", onMouse);
-
-    /* ── Animate ── */
-    let rafId;
-    const clock = new THREE.Clock();
-
-    const animate = () => {
-      rafId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
-      mat.uniforms.uTime.value        = t;
-      sphereMat.uniforms.uTime.value  = t;
-
-      const mx = mat.uniforms.uMouse.value.x;
-      const my = mat.uniforms.uMouse.value.y;
-
-      particles.rotation.y = t * 0.03 + mx * 0.06;
-      particles.rotation.x = t * 0.015 + my * 0.04;
-      ico.rotation.y       = t * 0.06;
-      ico.rotation.x       = t * 0.04;
-      sphere.rotation.y    = t * 0.1;
-
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("mousemove", onMouse);
-      renderer.dispose();
-    };
-  }, []);
-
-
-  /* ── 3D hero tilt (mouse parallax) ── */
-  useEffect(() => {
-    let rafId;
-    const lerp = (a, b, t) => a + (b - a) * t;
-
-    const onMouse = (e) => {
-      const cx = window.innerWidth  / 2;
-      const cy = window.innerHeight / 2;
-      targetTilt.current = {
-        x: ((e.clientY - cy) / cy) * -7,
-        y: ((e.clientX - cx) / cx) *  7,
-      };
-    };
-    window.addEventListener("mousemove", onMouse);
-
-    const tick = () => {
-      currentTilt.current.x = lerp(currentTilt.current.x, targetTilt.current.x, 0.06);
-      currentTilt.current.y = lerp(currentTilt.current.y, targetTilt.current.y, 0.06);
-      if (hero3dRef.current) {
-        hero3dRef.current.style.transform =
-          `rotateX(${currentTilt.current.x}deg) rotateY(${currentTilt.current.y}deg)`;
-      }
-      rafId = requestAnimationFrame(tick);
-    };
-    tick();
-
-    return () => {
-      window.removeEventListener("mousemove", onMouse);
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
-  /* ── Intersection observer for feature cards ── */
-  useEffect(() => {
-    const cards = document.querySelectorAll(".feat-card");
-    const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => {
-        if (e.isIntersecting) e.target.style.opacity = "1";
-      }),
-      { threshold: 0.15 }
-    );
-    cards.forEach((c, i) => {
-      c.style.opacity = "0";
-      c.style.animationDelay = `${i * 0.08}s`;
-      obs.observe(c);
-    });
-    return () => obs.disconnect();
-  }, []);
-
-  /* ── Navbar scroll tint ── */
-  useEffect(() => {
-    const nav = document.querySelector(".home-nav");
-    const onScroll = () => {
-      if (window.scrollY > 40) nav.classList.add("scrolled");
-      else nav.classList.remove("scrolled");
-    };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  // Interactive Command Runner
+  const runCommand = (cmdKey) => {
+    if (cmdKey === "task") {
+      setLogs((prev) => [
+        ...prev,
+        { type: "cmd", text: '$ devspace task create --urgent "Sub-15ms WebSocket Broadcast"' },
+        { type: "ok", text: "✓ Task #DES-105 created · assigned to team · priority: urgent · status: To Do" },
+      ]);
+      toast.success("CLI Task Created: #DES-105 (Urgent)");
+    } else if (cmdKey === "standup") {
+      setLogs((prev) => [
+        ...prev,
+        { type: "cmd", text: '$ devspace standup post --yesterday "PR #88 merged" --streak 15' },
+        { type: "ok", text: "✓ Standup recorded for today · streak updated: 15 consecutive days" },
+      ]);
+      toast.success("CLI Standup Logged: 15-day streak!");
+    } else if (cmdKey === "board") {
+      setLogs((prev) => [
+        ...prev,
+        { type: "cmd", text: '$ devspace board move #DES-102 --to "Done"' },
+        { type: "ok", text: "✓ Task #DES-102 moved to Done · Sprint velocity updated to 91%" },
+      ]);
+      toast.success("Task #DES-102 moved to Done (+9% velocity)");
+    } else if (cmdKey === "theme") {
+      const nextTheme = isDark ? THEMES.DAYLIGHT : THEMES.WARM_DARK;
+      setTheme(nextTheme);
+      setLogs((prev) => [
+        ...prev,
+        { type: "cmd", text: "$ devspace theme toggle" },
+        { type: "ok", text: `✓ Theme toggled to ${nextTheme === THEMES.DAYLIGHT ? "Daylight Light ☀️" : "HeroUI Warm Dark 🌙"}` },
+      ]);
+      toast.success(`Theme switched to ${nextTheme === THEMES.DAYLIGHT ? "Daylight ☀️" : "Warm Dark 🌙"}`);
+    }
+  };
 
   return (
-    <>
-
-      {/* Three.js canvas */}
-      <canvas id="home-canvas" ref={canvasRef} />
-
-      {/* Noise grain */}
-      <div className="home-grain" />
-
-      {/* ── Navbar ── */}
+    <div className="home-container">
+      
+      {/* ── Top Navigation Bar ── */}
       <nav className="home-nav">
-        <Link to="/" className="home-nav-brand">
-          <div className="home-nav-gem"><IconLogo /></div>
-          <span className="home-nav-wordmark">DevCollab</span>
+        {/* Brand Monogram + Wordmark */}
+        <Link to="/" className="flex items-center gap-2.5 text-inherit no-underline">
+          <div className="w-8 h-8 rounded-xl btn-brand-accent flex items-center justify-center font-black text-xs font-mono shadow-md">
+            DS
+          </div>
+          <span className="font-extrabold text-base sm:text-lg tracking-tight">DevSpace</span>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 opacity-70 ml-1 hidden sm:inline">
+            v2.4
+          </span>
         </Link>
 
-        {/* Top-right auth buttons */}
-        <div className="home-nav-auth">
-          <Link to="/login"  className="btn-ghost">Sign in</Link>
-          <Link to="/signup" className="btn-primary">
-            Get started <IconArrow />
+        {/* Center Nav Links (Desktop) */}
+        <div className="hidden md:flex items-center gap-6 text-xs sm:text-sm font-medium opacity-80">
+          <a href="#features" className="text-inherit no-underline hover:opacity-100 transition">Features</a>
+          <a href="#command-center" className="text-inherit no-underline hover:opacity-100 transition">Command Center</a>
+          <a href="#keybindings" className="text-inherit no-underline hover:opacity-100 transition">Shortcuts</a>
+        </div>
+
+        {/* Right Actions: Theme Switcher & Auth */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          
+          {/* Dedicated Daylight vs Warm Dark Toggle */}
+          <div className="flex items-center bg-black/5 dark:bg-white/5 border border-inherit p-0.5 sm:p-1 rounded-2xl gap-0.5">
+            <button
+              onClick={() => setTheme(THEMES.DAYLIGHT)}
+              className={`px-2 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                !isDark 
+                  ? "bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm" 
+                  : "opacity-60 hover:opacity-100"
+              }`}
+              title="Switch to Daylight Light"
+            >
+              <Sun className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline">Daylight</span>
+            </button>
+
+            <button
+              onClick={() => setTheme(THEMES.WARM_DARK)}
+              className={`px-2 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                isDark 
+                  ? "brand-accent-text bg-amber-500/15 border border-amber-500/30 shadow-sm" 
+                  : "opacity-60 hover:opacity-100"
+              }`}
+              title="Switch to HeroUI Warm Dark"
+            >
+              <Moon className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Warm Dark</span>
+            </button>
+          </div>
+
+          {/* Auth Links */}
+          <Link to="/login" className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold hover:opacity-80 transition text-inherit no-underline">
+            Sign In
+          </Link>
+          <Link to="/signup" className="btn-brand-accent px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 no-underline">
+            <span>Get Started</span>
+            <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />
           </Link>
         </div>
       </nav>
 
-      {/* ── Page ── */}
-      <div className="home-page">
-
-        {/* ── HERO ── */}
-        <section className="home-hero">
-          <div className="hero-3d-wrapper">
-            <div className="hero-3d-inner" ref={hero3dRef}>
-
-              <div className="hero-badge">
-                <div className="hero-badge-dot">⚡</div>
-                Real-time collaboration · Now in open beta
-              </div>
-
-              <h1 className="hero-title">
-                <span className="line-1">Code Together.</span>
-                <span className="line-2">Ship Faster.</span>
-                <span className="line-3">Build Anything.</span>
-              </h1>
-
-              <p className="hero-sub">
-                DevCollab is the real-time workspace built for engineering teams —
-                synchronized editors, live cursors, and instant feedback so you
-                spend time building, not coordinating.
-              </p>
-
-              <div className="hero-ctas">
-                <Link to="/signup" className="btn-hero-primary">
-                  Start for free <IconArrow />
-                </Link>
-                <button className="btn-hero-ghost">
-                  <IconPlay /> Watch demo
-                </button>
-              </div>
-
-              {/* floating UI card */}
-              <div className="hero-ui-card">
-                {/* floating badges */}
-                <div className="hero-float-badge"
-                  style={{ top: -22, left: -60, "--dur": "4.2s", "--delay": "0s" }}>
-                  <div className="hfb-label">Sync latency</div>
-                  <div className="hfb-value" style={{ color: "#34d399" }}>18 ms</div>
-                </div>
-
-                <div className="hero-float-badge"
-                  style={{ bottom: 20, right: -70, "--dur": "3.8s", "--delay": "1.2s" }}>
-                  <div className="hfb-label">Active now</div>
-                  <div className="hfb-value" style={{ color: "#818cf8" }}>4 devs</div>
-                </div>
-
-                <div className="hero-ui-card-inner">
-                  <div className="ui-card-bar">
-                    <div className="ui-card-dot" style={{ background: "#f87171" }} />
-                    <div className="ui-card-dot" style={{ background: "#fbbf24" }} />
-                    <div className="ui-card-dot" style={{ background: "#34d399" }} />
-                    <div className="ui-card-tab active">useCollab.ts</div>
-                    <div className="ui-card-tab">socket.ts</div>
-                  </div>
-
-                  <div className="ui-card-body">
-                    {[
-                      <><span className="cm">// Real-time hook — syncing cursors & state</span></>,
-                      <><span className="kw">export const</span> <span className="fn">useCollab</span> = (<span className="str">roomId</span>) =&gt; {"{"}</>,
-                      <>&nbsp;&nbsp;<span className="kw">const</span> [peers, setPeers] = useState([]);</>,
-                      <>&nbsp;&nbsp;<span className="kw">const</span> socket = <span className="fn">io</span>(`/room/${"{"}<span className="str">roomId</span>{"}"}`);</>,
-                      <>&nbsp;&nbsp;<span className="kw">useEffect</span>(() =&gt; {"{"}</>,
-                      <>&nbsp;&nbsp;&nbsp;&nbsp;socket.<span className="fn">on</span>(<span className="str">'cursor'</span>, <span className="fn">syncCursor</span>);<span className="cursor-blink" /></>,
-                    ].map((line, i) => (
-                      <div className="code-line" key={i}>
-                        <span className="code-num">{i + 1}</span>
-                        <span className="tx">{line}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="ui-card-footer">
-                    <div className="live-pill">
-                      <div className="live-pip" /> Live sync active
-                    </div>
-                    <div className="collab-faces">
-                      {[
-                        { l: "A", bg: "#6366f1" },
-                        { l: "S", bg: "#ec4899" },
-                        { l: "R", bg: "#f59e0b" },
-                        { l: "K", bg: "#10b981" },
-                      ].map((f) => (
-                        <div key={f.l} className="collab-face" style={{ background: f.bg }}>
-                          {f.l}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* end ui card */}
-
-            </div>
-          </div>
-        </section>
-
-        {/* ── NUMBERS ── */}
-        <div className="home-numbers">
-          <div className="numbers-inner">
-            {[
-              { value: "12K+",   label: "Active developers" },
-              { value: "98ms",   label: "Avg. sync latency"  },
-              { value: "340K+",  label: "Sessions launched"  },
-              { value: "99.9%",  label: "Uptime SLA"         },
-            ].map((n) => (
-              <div className="num-item" key={n.label}>
-                <div className="num-value">{n.value}</div>
-                <div className="num-label">{n.label}</div>
-              </div>
-            ))}
-          </div>
+      {/* ── Hero Section (Option 1 Text + Option 3 Command Center) ── */}
+      <section className="home-hero home-grid-pattern">
+        
+        {/* Live Status Capsule */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 dark:bg-white/5 border border-inherit text-xs font-semibold mb-5 sm:mb-6 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+          <span>DevSpace 2.0 Autonomous Engineering</span>
+          <span className="opacity-40">|</span>
+          <span className="brand-accent-text font-bold">Zero Latency MERN</span>
         </div>
 
-        {/* ── FEATURES ── */}
-        <section className="home-features">
-          <div className="section-label">Why DevCollab</div>
-          <h2 className="section-title">Everything your team needs</h2>
-          <p className="section-sub">
-            One workspace. Real-time everything. No more Slack threads about who's touching which file.
-          </p>
+        {/* Headline (Option 1 copy, fully responsive) */}
+        <h1 className="home-title">
+          The high-velocity workspace for modern software teams.
+        </h1>
 
-          <div className="feat-grid">
-            {FEATURES.map((f) => (
-              <div className="feat-card" key={f.name}>
-                <div className="feat-card-glow" />
-                <div className="feat-icon">{f.icon}</div>
-                <div className="feat-name">{f.name}</div>
-                <p className="feat-desc">{f.desc}</p>
+        {/* Subhead (Option 1 copy, punchy & uncluttered) */}
+        <p className="home-sub">
+          Streamline your sprint cycles, drag-and-drop Kanban, async standups, and live Socket.IO messaging in one unified cockpit. No friction, zero context switching.
+        </p>
+
+        {/* CTA Button Group */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-10 sm:mb-12 w-full px-2">
+          <Link
+            to="/signup"
+            className="btn-brand-accent px-6 py-3 rounded-xl font-bold text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2 w-full sm:w-auto no-underline"
+          >
+            <span>Start Building for Free</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <a
+            href="#command-center"
+            className="saas-card px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 transition w-full sm:w-auto text-inherit no-underline"
+          >
+            <kbd className="font-mono text-[11px] bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded">⌘K</kbd>
+            <span>Test Drive Commands</span>
+          </a>
+        </div>
+
+        {/* =============================================================== */}
+        {/* INTERACTIVE COMMAND CENTER TERMINAL WIDGET (Option 3 Hero)     */}
+        {/* =============================================================== */}
+        <div id="command-center" className="terminal-window">
+          
+          {/* Terminal Window Chrome */}
+          <div className="flex items-center justify-between pb-3 border-b border-inherit mb-3 text-[11px] opacity-70">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span className="ml-1 font-bold">devspace.workspace/command-stream</span>
+            </div>
+            <span className="text-[10px] opacity-50 hidden sm:inline">Socket.IO: Connected (12ms)</span>
+          </div>
+
+          {/* Quick Interactive Command Launcher Chips */}
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3.5">
+            <button
+              onClick={() => runCommand("task")}
+              className="px-2.5 py-1.2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-amber-500/20 hover:text-amber-400 border border-inherit transition text-[11px] font-semibold text-left"
+            >
+              &gt; task create --urgent
+            </button>
+            <button
+              onClick={() => runCommand("standup")}
+              className="px-2.5 py-1.2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-emerald-500/20 hover:text-emerald-400 border border-inherit transition text-[11px] font-semibold text-left"
+            >
+              &gt; standup post
+            </button>
+            <button
+              onClick={() => runCommand("board")}
+              className="px-2.5 py-1.2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-sky-500/20 hover:text-sky-400 border border-inherit transition text-[11px] font-semibold text-left"
+            >
+              &gt; board move #DES-102
+            </button>
+            <button
+              onClick={() => runCommand("theme")}
+              className="px-2.5 py-1.2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-purple-500/20 hover:text-purple-400 border border-inherit transition text-[11px] font-semibold text-left"
+            >
+              &gt; theme toggle
+            </button>
+          </div>
+
+          {/* Terminal Screen Stream */}
+          <div className="terminal-screen" ref={terminalLogRef}>
+            {logs.map((log, index) => (
+              <div
+                key={index}
+                className={`break-words ${
+                  log.type === "cmd"
+                    ? "text-emerald-400 font-bold"
+                    : log.type === "ok"
+                    ? "opacity-85"
+                    : log.type === "warn"
+                    ? "text-amber-400"
+                    : "opacity-50 italic"
+                }`}
+              >
+                {log.text}
               </div>
             ))}
           </div>
-        </section>
 
-        {/* ── CTA ── */}
-        <section className="home-cta-section">
-          <div className="section-label">Get started today</div>
-          <h2 className="cta-title">
-            Your team is waiting.<br />
-            Stop the context switching.
-          </h2>
-          <p className="cta-sub">Free for teams up to 5. No credit card required.</p>
-          <div className="hero-ctas">
-            <Link to="/signup" className="btn-hero-primary">
-              Create free workspace <IconArrow />
-            </Link>
-            <Link to="/login" className="btn-hero-ghost">
-              Already have an account →
-            </Link>
+          {/* Terminal Footer */}
+          <div className="mt-3 pt-2.5 border-t border-inherit flex items-center justify-between text-[10px] sm:text-[11px] opacity-60">
+            <span>💡 Click any command pill above to simulate live MERN execution</span>
+            <span className="font-mono">Real-time telemetry</span>
           </div>
-        </section>
 
-        {/* ── FOOTER ── */}
-        <footer>
-          <div className="home-footer">
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div className="home-nav-gem" style={{ width: 26, height: 26, borderRadius: 7 }}>
-                <IconLogo />
+        </div>
+
+      </section>
+
+      {/* ── Keybindings Matrix (2-col mobile, 4-col desktop) ── */}
+      <section id="keybindings" className="w-full max-w-3xl px-4 sm:px-6 mb-12 sm:mb-16">
+        <div className="text-xs font-bold tracking-wider uppercase opacity-60 mb-3 text-center sm:text-left">
+          Keystroke Navigation
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5 text-left">
+          <div className="saas-card p-3 rounded-xl">
+            <div className="font-mono text-xs font-bold brand-accent-text mb-1">G + B</div>
+            <div className="text-xs opacity-75">Kanban Board</div>
+          </div>
+          <div className="saas-card p-3 rounded-xl">
+            <div className="font-mono text-xs font-bold brand-accent-text mb-1">C + T</div>
+            <div className="text-xs opacity-75">Create Task</div>
+          </div>
+          <div className="saas-card p-3 rounded-xl">
+            <div className="font-mono text-xs font-bold brand-accent-text mb-1">S + D</div>
+            <div className="text-xs opacity-75">Async Standup</div>
+          </div>
+          <div className="saas-card p-3 rounded-xl">
+            <div className="font-mono text-xs font-bold brand-accent-text mb-1">⌘ + K</div>
+            <div className="text-xs opacity-75">Quick Search</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Feature Grid (Spacious 1-col mobile, 2-col desktop) ── */}
+      <section id="features" className="w-full max-w-5xl px-4 sm:px-6 py-8 sm:py-12 border-t border-inherit">
+        <div className="text-center mb-8 sm:mb-10">
+          <div className="text-xs font-bold tracking-wider uppercase opacity-60 mb-2">Engineered For Velocity</div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Everything your engineering team actually uses</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+          
+          {/* Card 1: Kanban */}
+          <div className="saas-card p-5 sm:p-6 flex flex-col justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 brand-accent-text flex items-center justify-center mb-3.5">
+                <Kanban className="w-5 h-5" />
               </div>
-              <span style={{ fontFamily: "var(--font-d)", fontWeight: 800, fontSize: 14 }}>
-                DevCollab
-              </span>
+              <h3 className="font-bold text-base sm:text-lg mb-1.5">Zero-Lag Drag-and-Drop Board</h3>
+              <p className="text-xs sm:text-sm opacity-75 leading-relaxed mb-4">
+                Full-fidelity Kanban boards with urgent priorities, blocker flags, GitHub PR backlinks, and MongoDB state persistence with instant optimistic re-ordering.
+              </p>
             </div>
-            <div style={{ display: "flex", gap: 24 }}>
-              <a href="#">Privacy</a>
-              <a href="#">Terms</a>
-              <a href="#">Docs</a>
-              <a href="#">Status</a>
+            <div className="bg-black/5 dark:bg-black/40 p-2.5 rounded-xl border border-inherit font-mono text-[11px] flex items-center justify-between">
+              <span className="text-emerald-400">✓ Optimistic UI update</span>
+              <span className="opacity-50">&lt;12ms backend sync</span>
             </div>
-            <span>© {new Date().getFullYear()} DevCollab. All rights reserved.</span>
           </div>
-        </footer>
-      </div>
-    </>
+
+          {/* Card 2: Async Standups */}
+          <div className="saas-card p-5 sm:p-6 flex flex-col justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center mb-3.5">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-base sm:text-lg mb-1.5">Async Standups & Streak Heatmaps</h3>
+              <p className="text-xs sm:text-sm opacity-75 leading-relaxed mb-4">
+                Replace 30-minute status meetings with structured async check-ins, automatic blocker alerts, and 14-day team participation streaks.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3.5 h-3.5 rounded bg-emerald-500/30"></div>
+              <div className="w-3.5 h-3.5 rounded bg-emerald-500/50"></div>
+              <div className="w-3.5 h-3.5 rounded bg-emerald-500/80"></div>
+              <div className="w-3.5 h-3.5 rounded bg-emerald-500"></div>
+              <span className="text-[11px] opacity-65 ml-2 font-semibold">14-Day Consecutive Streak</span>
+            </div>
+          </div>
+
+          {/* Card 3: Chat Channels */}
+          <div className="saas-card p-5 sm:p-6 flex flex-col justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center mb-3.5">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-base sm:text-lg mb-1.5">Engineering Channels & DMs</h3>
+              <p className="text-xs sm:text-sm opacity-75 leading-relaxed mb-4">
+                Sub-20ms team chat with typing indicators, presence stack, and auto-scrolling message streams wired cleanly via Socket.IO.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono text-sky-400 font-semibold">#engineering · #releases</span>
+          </div>
+
+          {/* Card 4: Meeting Notes */}
+          <div className="saas-card p-5 sm:p-6 flex flex-col justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center mb-3.5">
+                <FileText className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-base sm:text-lg mb-1.5">Rich Meeting Notes with Backlinks</h3>
+              <p className="text-xs sm:text-sm opacity-75 leading-relaxed mb-4">
+                Collaborative markdown notes linked directly to sprint tasks, blockers, and decisions. Never lose sprint retrospective outcomes again.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+              <span className="px-2 py-0.5 rounded-lg bg-black/5 dark:bg-white/10">Sprint 42 Retro.md</span>
+              <span className="px-2 py-0.5 rounded-lg bg-black/5 dark:bg-white/10">ADR #14</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── Bottom Call To Action ── */}
+      <section className="w-full max-w-5xl px-4 sm:px-6 py-10 sm:py-16 text-center">
+        <div className="saas-card p-6 sm:p-10 relative overflow-hidden">
+          <h2 className="text-2xl sm:text-3xl font-black mb-3">Ready to accelerate your engineering workflow?</h2>
+          <p className="text-xs sm:text-sm opacity-75 max-w-xl mx-auto mb-6">
+            Join hundreds of developers shipping faster with DevSpace. No credit card required.
+          </p>
+          <Link
+            to="/signup"
+            className="btn-brand-accent px-7 py-3 rounded-xl font-extrabold text-xs sm:text-sm shadow-xl inline-flex items-center gap-2 no-underline"
+          >
+            <span>Create Free Workspace</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="w-full max-w-5xl px-4 sm:px-6 py-6 border-t border-inherit flex flex-col sm:flex-row items-center justify-between gap-3 text-xs opacity-60">
+        <div className="flex items-center gap-2">
+          <span className="font-bold">DevSpace</span>
+          <span>·</span>
+          <span>Autonomous High-Velocity Engineering Workspace</span>
+        </div>
+        <div>
+          <span>© 2026 DevSpace. All rights reserved.</span>
+        </div>
+      </footer>
+
+    </div>
   );
 }
