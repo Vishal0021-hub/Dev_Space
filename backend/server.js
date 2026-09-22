@@ -155,6 +155,10 @@ app.use("/api/analytics", analyticsRoutes);
 const meetingRoutes = require("./routes/meetingRoutes");
 app.use("/api/meetings", meetingRoutes);
 
+/* ── GitHub Integration ──────────────────────────────────────── */
+const githubRoutes = require("./routes/githubRoutes");
+app.use("/api/github", githubRoutes);
+
 /* ── Standups ────────────────────────────────────────────────── */
 const standupRoutes = require("./routes/standupRoutes");
 app.use("/api/standup", standupRoutes);

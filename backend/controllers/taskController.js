@@ -31,7 +31,7 @@ const getWorkspaceForTask = async (task) => {
 exports.createTask = async (req, res) => {
   try {
     console.log("Create Task Request:", req.body);
-    const { title, description, boardId, priority, dueDate } = req.body;
+    const { title, description, boardId, priority, dueDate, assignedTo } = req.body;
 
     const board = await Board.findById(boardId).populate("project");
 
@@ -43,10 +43,15 @@ exports.createTask = async (req, res) => {
       title,
       description,
       board: boardId,
-      priority,
-      dueDate,
+      priority: priority || "medium",
+      dueDate: dueDate || null,
+      assignedTo: assignedTo || null,
       createdBy: req.user._id,
     });
+
+    if (assignedTo) {
+      await task.populate("assignedTo", "name email avatar");
+    }
 
     // Log Activity
     const workspaceId = board.project?.workspace?._id || board.project?.workspace || board.project?._id;

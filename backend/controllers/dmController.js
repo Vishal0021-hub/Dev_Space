@@ -11,10 +11,17 @@ exports.getDMs = async (req, res) => {
     const limit = parseInt(req.query.limit) || 50;
     const skip  = (page - 1) * limit;
 
-    if (!workspaceId) return res.status(400).json({ message: "workspaceId is required" });
+    let wsId = workspaceId;
+    if (!wsId) {
+      const Workspace = require("../models/workspace");
+      const commonWs = await Workspace.findOne({
+        $or: [{ owner: req.user._id }, { "members.userId": req.user._id }]
+      });
+      wsId = commonWs?._id;
+    }
 
     const query = {
-      workspace: workspaceId,
+      ...(wsId && { workspace: wsId }),
       $or: [
         { sender: req.user._id, recipient: recipientId },
         { sender: recipientId, recipient: req.user._id }
@@ -43,7 +50,15 @@ exports.sendDM = async (req, res) => {
     if (!content || !content.trim()) {
       return res.status(400).json({ message: "Message content cannot be empty" });
     }
-    if (!workspaceId) return res.status(400).json({ message: "workspaceId is required" });
+
+    let wsId = workspaceId;
+    if (!wsId) {
+      const Workspace = require("../models/workspace");
+      const commonWs = await Workspace.findOne({
+        $or: [{ owner: req.user._id }, { "members.userId": req.user._id }]
+      });
+      wsId = commonWs?._id;
+    }
 
     const recipient = await User.findById(recipientId);
     if (!recipient) return res.status(404).json({ message: "Recipient not found" });
@@ -52,7 +67,7 @@ exports.sendDM = async (req, res) => {
       content: content.trim(),
       sender:    req.user._id,
       recipient: recipientId,
-      workspace: workspaceId
+      ...(wsId && { workspace: wsId })
     });
 
     await message.populate("sender",    "name avatar email");

@@ -121,15 +121,21 @@ exports.sendMessage = async (req, res) => {
     if (!channel) return res.status(404).json({ message: "Channel not found" });
 
     if (channel.isPrivate) {
-      const isMember = channel.members.some(m => m.user.toString() === req.user._id.toString());
+      const targetUserId = req.user._id.toString();
+      const isMember = channel.members?.some(m => {
+        const uId = m.user?._id || m.user;
+        return uId && uId.toString() === targetUserId;
+      });
       if (!isMember) return res.status(403).json({ message: "You are not a member of this private channel" });
     }
+
+    const wsId = channel.workspace || req.body.workspaceId;
 
     const message = await Message.create({
       content: content.trim(),
       channel: channelId,
       sender: req.user._id,
-      workspace: channel.workspace,
+      ...(wsId && { workspace: wsId }),
       messageType: type,
       replyTo: replyTo || null
     });
@@ -139,11 +145,14 @@ exports.sendMessage = async (req, res) => {
 
     // ── Real-time: broadcast to channel room ──────────────────
     try {
-      getIO().to(`ch:${channelId}`).emit("channel:newMessage", message.toObject());
+      const obj = message.toObject();
+      getIO().to(`ch:${channelId}`).emit("channel:newMessage", obj);
+      getIO().to(`ch:${channelId}`).emit("message:created", obj);
     } catch {}
 
     res.status(201).json(message);
   } catch (err) {
+    console.error("[sendMessage] error:", err);
     res.status(500).json({ message: err.message });
   }
 };

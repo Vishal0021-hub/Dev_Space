@@ -5,8 +5,15 @@ const { logActivity } = require("../utils/activityLogger");
 // Create Project
 exports.createProject = async (req, res) => {
   try {
+    const { name, workspaceId, description } = req.body;
 
-    const { name, workspaceId } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Project name is required" });
+    }
+
+    if (!workspaceId) {
+      return res.status(400).json({ message: "Workspace ID is required" });
+    }
 
     // check workspace exists
     const workspace = await Workspace.findById(workspaceId);
@@ -15,28 +22,43 @@ exports.createProject = async (req, res) => {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
-    // check user is member
-    const isMember = workspace.members.some(
-      (member) => member.userId.toString() === req.user._id.toString()
-    );
+    // check user is member or owner safely
+    const targetUserId = req.user._id.toString();
+    const isDirectOwner = workspace.owner && workspace.owner.toString() === targetUserId;
+    const isMember = isDirectOwner || (workspace.members && workspace.members.some((member) => {
+      const mId = member?.userId?._id || member?.userId;
+      return mId && mId.toString() === targetUserId;
+    }));
 
     if (!isMember) {
-      return res.status(403).json({ message: "Not authorized" });
+      return res.status(403).json({ message: "Not authorized to create project in this workspace" });
     }
 
     const project = await Project.create({
-      name,
+      name: name.trim(),
+      description: description ? description.trim() : "",
       workspace: workspaceId,
       createdBy: req.user._id
     });
 
+    // Create a default Kanban Board for the project so users immediately have an active board
+    const Board = require("../models/Board");
+    const existingBoards = await Board.find({ project: project._id });
+    if (existingBoards.length === 0) {
+      await Board.create({
+        name: "Main Board",
+        project: project._id,
+      });
+    }
+
     await logActivity(workspaceId, req.user._id, "project_created", {
-        projectName: name
+      projectName: name.trim()
     });
 
     res.status(201).json(project);
 
   } catch (error) {
+    console.error("[createProject] Error:", error);
     res.status(500).json({ message: error.message });
   }
 };

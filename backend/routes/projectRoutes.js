@@ -10,8 +10,8 @@ const {
 const { protect } = require("../middleware/authmiddleware");
 const { isAdmin, isMember } = require("../middleware/roleMiddleware");
 
-// Create project - Only Owner and Admin
-router.post("/", protect, isAdmin, createProject);
+// Create project - Any workspace member, admin, or owner can create
+router.post("/", protect, isMember, createProject);
 
 // Get single project details - Just auth (data scoped by projectId)
 router.get("/details/:projectId", protect, getProjectById);

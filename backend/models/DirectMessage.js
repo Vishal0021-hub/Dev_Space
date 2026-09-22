@@ -19,7 +19,7 @@ const directMessageSchema = new mongoose.Schema({
   workspace: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Workspace",
-    required: true
+    required: false
   },
   messageType: {
     type: String,
