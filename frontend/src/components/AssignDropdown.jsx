@@ -20,7 +20,10 @@ const MiniAvatar = ({ name, index, size = 24 }) => {
   );
 };
 
-const AssignDropdown = ({ members = [], selectedId, onSelect }) => {
+const AssignDropdown = ({ members = [], selectedId, selectedUserId, onSelect, onChange }) => {
+  const currentSelected = selectedId !== undefined ? selectedId : selectedUserId;
+  const handleSelect = onSelect || onChange || (() => {});
+
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef(null);
@@ -35,10 +38,12 @@ const AssignDropdown = ({ members = [], selectedId, onSelect }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const getMemberUser = (m) => m?.userId || m?.user;
-  const selectedMember = members?.find(m => {
+  const getMemberUser = (m) => m.userId || m.user || m;
+
+  const selectedMember = (members || []).find((m) => {
     const user = getMemberUser(m);
-    return user?._id === selectedId || user === selectedId;
+    const uId = user?._id || user;
+    return uId && currentSelected && uId.toString() === currentSelected.toString();
   });
   const selectedUser = selectedMember ? getMemberUser(selectedMember) : null;
   const filteredMembers = (members || []).filter(m => {
@@ -52,105 +57,98 @@ const AssignDropdown = ({ members = [], selectedId, onSelect }) => {
       {/* Trigger */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          width: "100%", padding: "12px 16px",
-          background: "rgba(255,255,255,0.03)",
-          border: `1px solid ${isOpen ? "var(--indigo)" : "var(--border)"}`,
-          borderRadius: 14, cursor: "pointer",
-          display: "flex", alignItems: "center", gap: 12,
-          transition: "all 0.2s",
-          boxShadow: isOpen ? "0 0 0 4px rgba(99,102,241,0.1)" : "none",
-        }}
+        className={`w-full px-4 py-2.5 bg-bg-surface border ${
+          isOpen ? "border-accent ring-2 ring-accent/20" : "border-border"
+        } rounded-xl cursor-pointer flex items-center gap-3 transition shadow-xs`}
       >
         {selectedUser ? (
           <>
             <MiniAvatar name={selectedUser?.name} index={members.indexOf(selectedMember)} />
-            <span style={{ fontSize: 14, color: "#fff", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span className="text-sm font-medium text-text-heading flex-1 truncate">
               {selectedUser?.name}
             </span>
           </>
         ) : (
-          <span style={{ fontSize: 14, color: "var(--text-3)", flex: 1 }}>Unassigned</span>
+          <span className="text-sm text-text-muted flex-1">Unassigned</span>
         )}
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ opacity: 0.5, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-          <polyline points="6 9 12 15 18 9"/>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          className={`text-text-muted transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
         </svg>
       </div>
 
       {/* Menu */}
       {isOpen && (
-        <div style={{
-          position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0,
-          background: "#1E293B",
-          border: "1px solid var(--border)",
-          borderRadius: 18, zIndex: 1000,
-          boxShadow: "0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)",
-          padding: 8,
-          animation: "dropdownIn 0.2s ease-out",
-        }}>
+        <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-bg-surface border border-border rounded-2xl z-50 shadow-2xl p-2 animate-in fade-in duration-150">
           {/* Search */}
-          <div style={{ padding: "4px 8px 8px" }}>
+          <div className="p-1 pb-2">
             <input
               autoFocus
               value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search members..."
-              style={{
-                width: "100%", padding: "8px 12px",
-                background: "#0F172A",
-                border: "1px solid #334155",
-                borderRadius: 10, color: "#F1F5F9", fontSize: 13,
-                outline: "none",
-              }}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search members…"
+              className="w-full px-3 py-2 bg-bg-canvas border border-border rounded-xl text-text-heading placeholder:text-text-muted text-xs outline-none focus:border-accent transition"
             />
           </div>
 
-          <div style={{ maxHeight: 220, overflowY: "auto" }}>
+          <div className="max-h-56 overflow-y-auto space-y-1">
             {/* Unassign option */}
             <div
-              onClick={() => { onSelect(""); setIsOpen(false); }}
-              style={{
-                padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                display: "flex", alignItems: "center", gap: 12,
-                background: !selectedId ? "rgba(99,102,241,0.1)" : "transparent",
-                transition: "all 0.2s",
+              onClick={() => {
+                handleSelect("");
+                setIsOpen(false);
               }}
-              className="dc-dropdown-item"
+              className={`p-2.5 rounded-xl cursor-pointer flex items-center gap-3 transition text-xs font-medium ${
+                !currentSelected
+                  ? "bg-accent/10 text-accent font-semibold"
+                  : "text-text-muted hover:bg-bg-surface-elevated hover:text-text-heading"
+              }`}
             >
-              <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              <div className="w-6 h-6 rounded-full bg-border flex items-center justify-center text-text-muted">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </div>
-              <span style={{ fontSize: 13, color: !selectedId ? "#fff" : "var(--text-3)" }}>Unassigned</span>
+              <span>Unassigned</span>
             </div>
 
             {filteredMembers.map((m, idx) => {
               const user = getMemberUser(m);
+              const uId = user?._id || user;
+              const isSelected = uId && currentSelected && uId.toString() === currentSelected.toString();
               return (
                 <div
-                  key={user?._id || user}
-                  onClick={() => { onSelect(user?._id || user); setIsOpen(false); }}
-                  style={{
-                    padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                    display: "flex", alignItems: "center", gap: 12,
-                    background: selectedId === user?._id || selectedId === user ? "rgba(99,102,241,0.1)" : "transparent",
-                    transition: "all 0.2s",
+                  key={uId}
+                  onClick={() => {
+                    handleSelect(uId);
+                    setIsOpen(false);
                   }}
-                  className="dc-dropdown-item"
+                  className={`p-2.5 rounded-xl cursor-pointer flex items-center gap-3 transition ${
+                    isSelected
+                      ? "bg-accent/10 text-accent font-semibold"
+                      : "text-text-heading hover:bg-bg-surface-elevated"
+                  }`}
                 >
                   <MiniAvatar name={user?.name} index={idx} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold truncate">
                       {user?.name}
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div className="text-[11px] text-text-muted truncate">
                       {user?.email}
                     </div>
                   </div>
-                  {(selectedId === user?._id || selectedId === user) && (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--indigo)" strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12"/>
+                  {isSelected && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-accent">
+                      <polyline points="20 6 9 17 4 12" />
                     </svg>
                   )}
                 </div>
@@ -158,7 +156,7 @@ const AssignDropdown = ({ members = [], selectedId, onSelect }) => {
             })}
 
             {filteredMembers.length === 0 && (
-              <div style={{ padding: "20px", textAlign: "center", fontSize: 12, color: "var(--text-3)" }}>
+              <div className="p-4 text-center text-xs text-text-muted">
                 No members found
               </div>
             )}

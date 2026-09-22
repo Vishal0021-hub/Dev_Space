@@ -30,9 +30,9 @@ export default class ErrorBoundary extends Component {
     return (
       <div style={{
         minHeight: "100vh",
-        background: "#0F172A",
+        background: "rgb(var(--bg-canvas))",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "Figtree, Inter, sans-serif", padding: 24,
+        padding: 24,
       }}>
         <div style={{
           maxWidth: 500, width: "100%", textAlign: "center",
@@ -43,13 +43,13 @@ export default class ErrorBoundary extends Component {
           </div>
 
           <h1 style={{
-            fontSize: 28, fontWeight: 900, color: "#fff",
+            fontSize: 28, fontWeight: 800, color: "rgb(var(--text-heading))",
             marginBottom: 8, letterSpacing: "-0.02em",
           }}>
             Something went wrong
           </h1>
 
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", marginBottom: 28, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: "rgb(var(--text-muted))", marginBottom: 28, lineHeight: 1.6 }}>
             An unexpected error occurred in this part of the app.<br/>
             Your data is safe — this is a display issue only.
           </p>
@@ -57,12 +57,12 @@ export default class ErrorBoundary extends Component {
           {/* Error detail */}
           <div style={{
             background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
-            borderRadius: 12, padding: "14px 18px", marginBottom: 28, textAlign: "left",
+            borderRadius: 14, padding: "14px 18px", marginBottom: 28, textAlign: "left",
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#f87171", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>
               Error Detail
             </div>
-            <code style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", fontFamily: "Fira Code, Consolas, monospace", wordBreak: "break-all" }}>
+            <code style={{ fontSize: 12, color: "rgb(var(--text-body))", fontFamily: "monospace", wordBreak: "break-all" }}>
               {msg}
             </code>
           </div>
@@ -71,27 +71,27 @@ export default class ErrorBoundary extends Component {
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={this.handleReset}
               style={{
-                background: "#4F46E5",
-                border: "none", borderRadius: 10, padding: "10px 22px",
-                color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer",
+                background: "rgb(var(--accent))",
+                border: "none", borderRadius: 12, padding: "10px 22px",
+                color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
               }}
             >
               Try Again
             </button>
             <button onClick={this.handleReload}
               style={{
-                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 10, padding: "10px 22px",
-                color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                background: "rgb(var(--bg-surface))", border: "1px solid rgb(var(--border))",
+                borderRadius: 12, padding: "10px 22px",
+                color: "rgb(var(--text-heading))", fontSize: 13, fontWeight: 600, cursor: "pointer",
               }}
             >
               Reload Page
             </button>
             <button onClick={this.handleHome}
               style={{
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 10, padding: "10px 22px",
-                color: "rgba(255,255,255,0.45)", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                background: "rgb(var(--bg-surface-elevated))", border: "1px solid rgb(var(--border))",
+                borderRadius: 12, padding: "10px 22px",
+                color: "rgb(var(--text-muted))", fontSize: 13, fontWeight: 600, cursor: "pointer",
               }}
             >
               Go to Dashboard

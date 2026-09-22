@@ -1,132 +1,57 @@
 @import "tailwindcss";
+@import "./styles/themes.css";
 
-  /* DevSpace color system:
-     Page:     #0F172A  (slate-950)
-     Card:     #1E293B  (slate-800)
-     Elevated: #253448
-     Border:   #334155  (slate-700)
-     Primary:  #6366F1  (indigo-500)
-  */
+/* Class-based dark variant for Tailwind v4 so OS prefers-color-scheme doesn't hijack Daylight */
+@custom-variant dark (&:where(.dark, .dark *));
 
-/* ─── Tailwind v4 design tokens ─────────────────────────────── */
-@theme {
-  /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Inter', -apple-system, sans-serif;
-
-  /* Page & surfaces */
-  --color-bg-base:       #0F172A;
-  --color-bg-sidebar:    #0F172A;
-  --color-bg-card:       #1E293B;
-  --color-bg-elevated:   #253448;
-  --color-bg-input:      rgba(15, 23, 42, 0.8);
-
-  /* Borders */
-  --color-border:        #334155;   /* slate-700  */
-  --color-border-subtle: #1E293B;   /* slate-800  */
-
-  /* Text */
-  --color-text-primary:   #F1F5F9;  /* slate-100  */
-  --color-text-secondary: #94A3B8;  /* slate-400  */
-  --color-text-muted:     #64748B;  /* slate-500  */
-
-  /* Accent — indigo */
-  --color-accent:         #6366F1;  /* indigo-500 */
-  --color-accent-hover:   #4F46E5;  /* indigo-600 */
-  --color-accent-bg:      rgba(99, 102, 241, 0.10);
-  --color-accent-bg-hover:rgba(99, 102, 241, 0.18);
-
-  /* Other accents */
-  --color-purple:  #8B5CF6;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-danger:  #EF4444;
-}
-
-/* ─── CSS custom properties (for var() in inline styles) ─────── */
-:root {
-  --bg-base:         #0F172A;
-  --bg-sidebar:      #0F172A;
-  --bg-card:         #1E293B;
-  --bg-elevated:     #253448;
-  --bg-input:        rgba(15, 23, 42, 0.8);
-
-  --border:          #334155;
-  --border-subtle:   #1E293B;
-
-  --text-primary:    #F1F5F9;
-  --text-secondary:  #94A3B8;
-  --text-muted:      #64748B;
-
-  --accent:          #6366F1;
-  --accent-hover:    #4F46E5;
-  --accent-bg:       rgba(99, 102, 241, 0.10);
-  --purple:          #8B5CF6;
-  --success:         #10B981;
-  --warning:         #F59E0B;
-  --danger:          #EF4444;
-
-  /* legacy alias kept for existing components */
-  --font-display:    'Inter', -apple-system, sans-serif;
-}
-
-/* ─── Global base ────────────────────────────────────────────── */
-*, *::before, *::after {
+/* ─── Global Base & Reset ────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html {
-  font-size: 14px;
+html, body {
+  background-color: var(--bg-canvas) !important;
+  color: var(--text-heading) !important;
+  font-family: var(--font-body, var(--font-family, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif));
+  font-size: var(--font-size-base, 16px);
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  border: none !important;
+  outline: none !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--bg-base);
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.5;
+/* ─── Custom Scrollbar matching prototype ───────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 140, 140, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 140, 140, 0.4);
 }
 
-/* ─── Scrollbar polish ───────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0F172A; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-/* ─── Focus ring ─────────────────────────────────────────────── */
-:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+/* ─── Tailwind v4 theme mapping ─────────────────────────────────── */
+@theme {
+  --color-bg-canvas: var(--bg-canvas);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-elevated: var(--bg-surface-elevated);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-text-heading: var(--text-heading);
+  --color-text-body: var(--text-body);
+  --color-text-muted: var(--text-muted);
 }
-
-/* ─── Base Card utility ──────────────────────────────────────── */
-.card {
-  background: var(--bg-card);
-  border: 1px solid rgba(51, 65, 85, 0.5);
-  border-radius: 12px;
-  transition: border-color 0.2s ease;
-}
-.card:hover {
-  border-color: #475569;
-}
-
-/* ─── Shared input style ─────────────────────────────────────── */
-.input-base {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 14px;
-  padding: 10px 14px;
-  outline: none;
-  transition: border-color 0.2s;
-  width: 100%;
-}
-.input-base::placeholder { color: var(--text-muted); }
-.input-base:focus { border-color: var(--accent); }
-
-/* ─── Selection ──────────────────────────────────────────────── */
-::selection { background: rgba(99, 102, 241, 0.3); color: #fff; }

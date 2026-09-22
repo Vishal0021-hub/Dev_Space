@@ -18,7 +18,7 @@ export function SocketProvider({ children }) {
 
     // Defer socket connection to next tick / idle so initial render and primary REST queries complete first
     const connectTimer = setTimeout(() => {
-      const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+      const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
       s = io(SOCKET_URL, {
         auth: { token },

@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
-const ActivityLog = ({ workspaceId }) => {
+const ActivityLog = ({ workspaceId, isOpen = false, onClose = () => {} }) => {
   const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (workspaceId) {
+    if (workspaceId && isOpen) {
       fetchActivities();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId]);
+  }, [workspaceId, isOpen]);
+
+  if (!isOpen) return null;
 
   const fetchActivities = async () => {
     try {
@@ -60,28 +62,49 @@ const ActivityLog = ({ workspaceId }) => {
     }
   };
 
-  if (loading) return <div className="dc-skeleton" style={{ height: 200, borderRadius: 16 }} />;
-
   return (
-    <div>
-      <div className="dc-activity-list">
-        {activities.length === 0 ? (
-          <p style={{ color: 'var(--text-3)', fontSize: 13, textAlign: 'center', marginTop: 40 }}>No activities yet.</p>
-        ) : (
-          activities.map((a) => (
-            <div key={a._id} className="dc-activity-item" style={{ marginBottom: 24, position: 'relative' }}>
-              <div className="dc-activity-dot" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, marginTop: 0, left: -6 }}>
-                {getActivityIcon(a.type)}
-              </div>
-              <div className="dc-activity-content" style={{ paddingLeft: 8 }}>
-                <div className="dc-activity-msg" style={{ fontSize: 13 }}>{getActivityMessage(a)}</div>
-                <div className="dc-activity-time" style={{ fontSize: 11, opacity: 0.5, marginTop: 4 }}>
-                  {new Date(a.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-150">
+      <div className="w-full max-w-sm h-full bg-bg-surface border-l border-inherit p-6 shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between pb-3 border-b border-inherit mb-4">
+            <div>
+              <h3 className="font-bold text-lg leading-none">Activity Stream</h3>
+              <p className="text-xs opacity-60 mt-1">Real-time audit log of team actions</p>
             </div>
-          ))
-        )}
+            <button
+              onClick={onClose}
+              className="p-1 rounded-xl opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto pr-1">
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-14 bg-black/5 dark:bg-white/5 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : activities.length === 0 ? (
+              <div className="text-center py-16 opacity-60 text-xs">No activity logged yet.</div>
+            ) : (
+              activities.map((a) => (
+                <div key={a._id} className="flex gap-3 items-start py-2.5 border-b border-inherit text-xs">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/15 brand-accent-text flex items-center justify-center shrink-0">
+                    {getActivityIcon(a.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="leading-snug">{getActivityMessage(a)}</div>
+                    <div className="text-[10px] opacity-50 mt-1 font-mono">
+                      {new Date(a.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

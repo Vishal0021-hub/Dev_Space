@@ -2,12 +2,14 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import API from "../services/api";
 
-const InviteModal = ({ workspaceId, onClose, onInviteSent }) => {
+const InviteModal = ({ workspaceId, onClose, onInviteSent, isOpen = false }) => {
   const [email,     setEmail]     = useState("");
   const [role,      setRole]      = useState("member");
   const [loading,   setLoading]   = useState(false);
   const [inviteLink, setInviteLink] = useState(null);
   const [emailSent, setEmailSent]   = useState(false);
+
+  if (!isOpen) return null;
 
   const handleInvite = async (e) => {
     e.preventDefault();
@@ -47,47 +49,14 @@ const InviteModal = ({ workspaceId, onClose, onInviteSent }) => {
   return (
     <div
       onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 300,
-        background: "rgba(15, 23, 42, 0.8)",
-        backdropFilter: "blur(12px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-        animation: "fadeIn 0.15s ease-out",
-      }}
+      className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-[fadeIn_0.15s_ease-out]"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%",
-          maxWidth: 460,
-          background: "#0a0c14",
-          border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 28,
-          padding: "40px 40px 36px",
-          boxShadow: "0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(99,102,241,0.1)",
-          animation: "modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1)",
-        }}
+        className="w-full max-w-md bg-bg-surface border border-border rounded-3xl p-8 shadow-2xl animate-[modalIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)] text-text-heading"
       >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 18,
-            background: "rgba(99,102,241,0.15)",
-            border: "1px solid rgba(99,102,241,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 24,
-            boxShadow: "0 8px 24px rgba(99,102,241,0.2)",
-          }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2.5">
+        <div className="w-12 h-12 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mb-5 text-accent shadow-sm">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
             <line x1="19" y1="8" x2="19" y2="14" />
@@ -95,34 +64,15 @@ const InviteModal = ({ workspaceId, onClose, onInviteSent }) => {
           </svg>
         </div>
 
-        <h2
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: 22,
-            fontWeight: 800,
-            color: "#fff",
-            marginBottom: 6,
-            letterSpacing: "-0.02em",
-          }}
-        >
+        <h2 className="text-xl font-bold text-text-heading mb-1 tracking-tight">
           Invite a Member
         </h2>
-        <p style={{ fontSize: 13, color: "var(--text-3)", marginBottom: 28, lineHeight: 1.5 }}>
+        <p className="text-xs text-text-muted mb-6 leading-relaxed">
           They must already have a DevCollab account. Enter their registered email address.
         </p>
 
         <form onSubmit={handleInvite}>
-          <label
-            style={{
-              display: "block",
-              fontSize: 11,
-              fontWeight: 700,
-              color: "var(--text-3)",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: 12,
-            }}
-          >
+          <label className="block text-[11px] font-bold text-text-muted uppercase tracking-wider mb-2">
             Email Address
           </label>
           <input
@@ -131,207 +81,101 @@ const InviteModal = ({ workspaceId, onClose, onInviteSent }) => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="member@example.com"
             required
-            style={{
-              width: "100%",
-              padding: "14px 16px",
-              borderRadius: 16,
-              border: "1px solid #334155",
-              background: "#0F172A",
-              color: "#F1F5F9",
-              fontSize: 14,
-              outline: "none",
-              marginBottom: 24,
-            }}
+            className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-canvas text-text-heading text-sm outline-none mb-5 focus:border-accent transition placeholder-text-muted/50"
           />
 
-          <label
-            style={{
-              display: "block",
-              fontSize: 11,
-              fontWeight: 700,
-              color: "var(--text-3)",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: 12,
-            }}
-          >
+          <label className="block text-[11px] font-bold text-text-muted uppercase tracking-wider mb-2">
             Assign Role
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+          <div className="grid grid-cols-2 gap-3 mb-5">
             <button
               type="button"
               onClick={() => setRole("member")}
-              style={{
-                padding: "12px",
-                borderRadius: 14,
-                background: role === "member" ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.02)",
-                border: `1px solid ${role === "member" ? "var(--indigo)" : "var(--border)"}`,
-                color: role === "member" ? "#fff" : "var(--text-3)",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-              }}
+              className={`p-3 rounded-xl border text-xs font-semibold cursor-pointer transition flex items-center justify-center gap-2 ${
+                role === "member"
+                  ? "bg-accent/15 border-accent text-accent font-bold"
+                  : "bg-bg-canvas border-border text-text-muted hover:text-text-heading"
+              }`}
             >
-              <span style={{ fontSize: 16 }}>👤</span> Member
+              <span className="text-sm">👤</span> Member
             </button>
             <button
               type="button"
               onClick={() => setRole("admin")}
-              style={{
-                padding: "12px",
-                borderRadius: 14,
-                background: role === "admin" ? "rgba(129,140,248,0.1)" : "rgba(255,255,255,0.02)",
-                border: `1px solid ${role === "admin" ? "var(--indigo)" : "var(--border)"}`,
-                color: role === "admin" ? "#fff" : "var(--text-3)",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-              }}
+              className={`p-3 rounded-xl border text-xs font-semibold cursor-pointer transition flex items-center justify-center gap-2 ${
+                role === "admin"
+                  ? "bg-accent/15 border-accent text-accent font-bold"
+                  : "bg-bg-canvas border-border text-text-muted hover:text-text-heading"
+              }`}
             >
-              <span style={{ fontSize: 16 }}>🛡️</span> Admin
+              <span className="text-sm">🛡️</span> Admin
             </button>
           </div>
 
-          <div
-            style={{
-              padding: "12px 14px",
-              borderRadius: 12,
-              background: "rgba(99,102,241,0.06)",
-              border: "1px solid rgba(99,102,241,0.15)",
-              fontSize: 11,
-              color: "var(--text-3)",
-              marginBottom: 24,
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 10,
-            }}
-          >
+          <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 text-xs text-text-muted mb-6 flex items-start gap-2.5">
             <svg
               width="14"
               height="14"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="var(--indigo)"
+              stroke="currentColor"
               strokeWidth="2.5"
-              style={{ marginTop: 1, flexShrink: 0 }}
+              className="mt-0.5 shrink-0 text-accent"
             >
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
-            <span>
+            <span className="leading-relaxed">
               {role === "admin"
                 ? "Admins can invite others, create projects, and manage tasks."
                 : "Members can view projects and manage tasks assigned to them."}
             </span>
           </div>
 
-          <div style={{ display: "flex", gap: 10 }}>
+          <div className="flex gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              style={{
-                flex: 1,
-                padding: "12px 20px",
-                borderRadius: 12,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid var(--border)",
-                color: "var(--text-3)",
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                fontFamily: "var(--font-body)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-                e.currentTarget.style.color = "#fff";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                e.currentTarget.style.color = "var(--text-3)";
-              }}
+              className="flex-1 py-2.5 px-4 rounded-xl border border-border text-text-muted hover:text-text-heading text-xs font-semibold cursor-pointer transition bg-transparent"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{
-                flex: 2,
-                padding: "12px 20px",
-                borderRadius: 12,
-                background: loading ? "rgba(99,102,241,0.3)" : "#4F46E5",
-                border: "none",
-                color: "#fff",
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: loading ? "not-allowed" : "pointer",
-                fontFamily: "var(--font-display)",
-                transition: "all 0.2s",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                boxShadow: loading ? "none" : "0 4px 16px rgba(99,102,241,0.35)",
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              className="flex-2 py-2.5 px-5 rounded-xl bg-accent hover:bg-accent-hover text-white text-xs font-bold cursor-pointer disabled:opacity-50 transition shadow-sm flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <>
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    style={{ animation: "spin 1s linear infinite" }}
-                  >
-                    <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="8" />
-                  </svg>
-                  Sending…
-                </>
-              ) : (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                  Send Invite
-                </>
-              )}
+              {loading ? "Sending…" : "Send Invite"}
             </button>
           </div>
+
           {/* ── Invite link panel (after invite created) ── */}
           {inviteLink && (
-            <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 12, background: emailSent ? "rgba(52,211,153,0.08)" : "rgba(251,191,36,0.08)", border: `1px solid ${emailSent ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)"}` }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: emailSent ? "#34d399" : "#fbbf24", marginBottom: 8 }}>
+            <div className={`mt-5 p-3.5 rounded-xl border ${emailSent ? "bg-emerald-500/10 border-emerald-500/25" : "bg-amber-500/10 border-amber-500/25"}`}>
+              <div className={`text-xs font-bold mb-2 ${emailSent ? "text-emerald-500" : "text-amber-500"}`}>
                 {emailSent ? "✓ Email sent! Share this link too:" : "⚠ Email not sent — share this link manually:"}
               </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <div style={{ flex: 1, fontSize: 11, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "monospace" }}>
+              <div className="flex gap-2 items-center">
+                <div className="flex-1 text-[11px] text-text-muted bg-bg-canvas border border-border rounded-lg p-2 overflow-hidden text-ellipsis whitespace-nowrap font-mono">
                   {inviteLink}
                 </div>
-                <button onClick={copyLink} style={{ flexShrink: 0, background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 8, padding: "8px 12px", color: "#818cf8", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Copy</button>
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  className="shrink-0 bg-accent/20 border border-accent/30 rounded-lg px-3 py-2 text-accent text-xs font-bold cursor-pointer hover:bg-accent/30 transition"
+                >
+                  Copy
+                </button>
               </div>
               {emailSent && (
-                <button onClick={onClose} style={{ width: "100%", marginTop: 12, background: "#4F46E5", border: "none", borderRadius: 10, padding: "10px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Done</button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full mt-3 bg-accent hover:bg-accent-hover border-none rounded-xl py-2 text-white text-xs font-bold cursor-pointer transition"
+                >
+                  Done
+                </button>
               )}
             </div>
           )}

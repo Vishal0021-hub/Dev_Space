@@ -1,0 +1,10 @@
+{
+  "name": "devspace-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone DevSpace SaaS Design Lab",
+  "scripts": {
+    "dev": "npx -y serve . -l 3333",
+    "start": "npx -y serve . -l 3333"
+  }
+}

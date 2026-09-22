@@ -46,9 +46,11 @@ const RoleBadge = ({ role }) => {
   );
 };
 
-const MembersSidebar = ({ workspaceId, members, userRole, onUpdate, onClose, onInviteOpen }) => {
+const MembersSidebar = ({ workspaceId, members = [], userRole = "member", onUpdate = () => {}, onClose, onInviteOpen, isOpen = false }) => {
   const [updating, setUpdating] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
+
+  if (!isOpen) return null;
 
   const handleChangeRole = async (userId, newRole) => {
     const loadingToast = toast.loading("Updating role...");
@@ -67,35 +69,29 @@ const MembersSidebar = ({ workspaceId, members, userRole, onUpdate, onClose, onI
   const isOwner = userRole === "owner";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-150">
+      <div className="w-full max-w-sm h-full bg-bg-surface border-l border-inherit p-6 shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200">
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <div>
-          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
+          <h3 className="font-bold text-lg text-text-heading m-0 leading-none">
             Workspace Members
           </h3>
-          <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>
+          <p className="text-xs text-text-muted mt-1">
             {members.length} {members.length === 1 ? "member" : "members"}
           </p>
         </div>
         <button
           onClick={onClose}
-          style={{
-            width: 32, height: 32, borderRadius: 10,
-            background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
-            color: "var(--text-3)", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 18, transition: "all 0.2s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "var(--text-3)"; }}
+          className="w-8 h-8 rounded-xl bg-bg-canvas border border-border text-text-muted hover:text-text-heading flex items-center justify-center text-lg cursor-pointer transition"
         >
           ×
         </button>
       </div>
 
-      <div style={{ width: "100%", height: 1, background: "var(--border)", margin: "16px 0" }} />
+      <div className="w-full h-px bg-border my-4" />
 
       {/* Members list */}
       <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -125,16 +121,10 @@ const MembersSidebar = ({ workspaceId, members, userRole, onUpdate, onClose, onI
                 <MemberAvatar name={user?.name} index={idx} />
 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: 13, fontWeight: 600, color: "#fff",
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
+                  <div className="text-xs font-semibold text-text-heading truncate">
                     {user?.name}
                   </div>
-                  <div style={{
-                    fontSize: 11, color: "var(--text-3)", marginTop: 2,
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
+                  <div className="text-[11px] text-text-muted truncate mt-0.5">
                     {user?.email}
                   </div>
                 </div>
@@ -149,16 +139,9 @@ const MembersSidebar = ({ workspaceId, members, userRole, onUpdate, onClose, onI
                         value={m.role}
                         disabled={updating === userId}
                         onChange={e => handleChangeRole(userId, e.target.value)}
-                        className="dc-role-select"
+                        className="dc-role-select text-[10px] py-1 px-2 bg-bg-canvas border border-border rounded-lg text-text-heading cursor-pointer outline-none appearance-none pr-5"
                         style={{
-                          fontSize: 10, padding: "4px 8px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid var(--border)",
-                          borderRadius: 8, color: "var(--text-2)",
-                          cursor: "pointer", outline: "none",
                           opacity: updating === userId ? 0.5 : 1,
-                          appearance: 'none',
-                          paddingRight: 20
                         }}
                       >
                         <option value="member">Member</option>
@@ -171,7 +154,7 @@ const MembersSidebar = ({ workspaceId, members, userRole, onUpdate, onClose, onI
                   )}
 
                   {updating === userId && (
-                    <span style={{ fontSize: 10, color: "var(--indigo)", animation: 'pulse 1.5s infinite' }}>Updating…</span>
+                    <span className="text-[10px] text-accent animate-pulse">Updating…</span>
                   )}
                 </div>
               </div>
@@ -182,21 +165,10 @@ const MembersSidebar = ({ workspaceId, members, userRole, onUpdate, onClose, onI
 
       {/* Invite button — bottom */}
       {(isOwner || userRole === "admin") && (
-        <div style={{ paddingTop: 20 }}>
+        <div className="pt-5">
           <button
             onClick={onInviteOpen}
-            style={{
-              width: "100%", padding: "13px 20px",
-              background: "#4F46E5",
-              border: "none", borderRadius: 14,
-              color: "#fff", fontFamily: "var(--font-display)",
-              fontSize: 14, fontWeight: 700, cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              transition: "all 0.2s",
-              boxShadow: "0 4px 20px rgba(99,102,241,0.3)",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(99,102,241,0.45)"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(99,102,241,0.3)"; }}
+            className="w-full py-3 px-5 bg-accent hover:bg-accent-hover text-white rounded-2xl font-bold text-sm cursor-pointer flex items-center justify-center gap-2 transition shadow-md"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
@@ -206,6 +178,8 @@ const MembersSidebar = ({ workspaceId, members, userRole, onUpdate, onClose, onI
           </button>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

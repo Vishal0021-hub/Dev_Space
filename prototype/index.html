@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevSpace — Warm Dark 🌙 & Daylight Light ☀️ Responsive SaaS</title>
+  
+  <!-- Premium Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            outfit: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(140, 140, 140, 0.2); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(140, 140, 140, 0.4); }
+
+    /* ========================================================================= */
+    /* CLEAN THEME DEFINITIONS: WARM STONE DARK 🌙 & DAYLIGHT LIGHT ☀️          */
+    /* ========================================================================= */
+
+    /* 1. HEROUI WARM STONE DARK (Warm Organic Zinc, Amber Glow, Soft Borders) */
+    .theme-warm-dark {
+      --bg-canvas: #0c0a09;
+      --bg-surface: #1c1917;
+      --bg-surface-elevated: #292524;
+      --border: rgba(255, 255, 255, 0.06); /* Soft, invisible outer lines like Daylight */
+      --border-focus: rgba(245, 158, 11, 0.4);
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.25);
+      --accent-hover: #d97706;
+      --accent-contrast: #0c0a09;
+      --text-heading: #fafaf9;
+      --text-body: #d6d3d1;
+      --text-muted: #a8a29e;
+      --card-radius: 20px;
+      --font-body: 'Outfit', sans-serif;
+      --font-size-base: 15.5px;
+      --card-shadow: 0 8px 30px -6px rgba(0, 0, 0, 0.65);
+    }
+
+    /* 2. DAYLIGHT CLEAN LIGHT (Cashmere Slate Canvas, Pure White Cards, 16px Font) */
+    .theme-daylight-light {
+      --bg-canvas: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f1f5f9;
+      --border: rgba(15, 23, 42, 0.07); /* Clean, barely visible soft hairlines */
+      --border-focus: #4338ca;
+      --accent: #4338ca;
+      --accent-glow: rgba(67, 56, 202, 0.16);
+      --accent-hover: #3730a3;
+      --accent-contrast: #ffffff;
+      --text-heading: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --card-radius: 18px;
+      --font-body: 'Inter', sans-serif;
+      --font-size-base: 15.5px;
+      --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 8px 24px -4px rgba(15, 23, 42, 0.05);
+    }
+
+    html, body {
+      background-color: var(--bg-canvas);
+      color: var(--text-heading);
+      border: none !important;
+      outline: none !important;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    /* Global Viewport Frame (No outer border or box outline!) */
+    #prototype-frame {
+      background-color: var(--bg-canvas);
+      color: var(--text-heading);
+      border-color: var(--border);
+      font-family: var(--font-body);
+      font-size: var(--font-size-base);
+      border: none !important; /* Removed outer line completely as requested! */
+      outline: none !important;
+      box-shadow: none !important;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .saas-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .saas-card:hover {
+      border-color: var(--border-focus);
+    }
+
+    /* Accent & Glow Classes */
+    .btn-brand-accent {
+      background-color: var(--accent);
+      color: var(--accent-contrast);
+      transition: all 0.2s ease;
+    }
+    .btn-brand-accent:hover {
+      background-color: var(--accent-hover);
+      box-shadow: 0 0 20px 0 var(--accent-glow);
+    }
+
+    .brand-accent-text { color: var(--accent); }
+    .brand-accent-bg { background-color: var(--accent); }
+
+    /* Responsive Simulation Breakpoints */
+    .mode-desktop { width: 100% !important; max-width: 100% !important; min-height: 100vh !important; }
+    .mode-tablet { width: 768px !important; max-width: 768px !important; border-radius: 28px !important; margin: 16px auto !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5) !important; }
+    .mode-mobile { width: 390px !important; max-width: 390px !important; border-radius: 40px !important; margin: 16px auto !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5) !important; }
+
+    .mode-mobile .hide-mobile { display: none !important; }
+    .mode-mobile .show-mobile { display: flex !important; }
+    .mode-tablet .hide-tablet { display: none !important; }
+    .mode-desktop .show-mobile { display: none !important; }
+  </style>
+</head>
+
+<body class="theme-warm-dark font-sans antialiased overflow-x-hidden min-h-screen flex flex-col items-center justify-start transition-colors duration-300" style="background-color: var(--bg-canvas); color: var(--text-heading); margin: 0; padding: 0;">
+
+  <!-- ================================================================= -->
+  <!-- MAIN APPLICATION VIEWPORT (Edge-to-edge, zero outer line borders) -->
+  <!-- ================================================================= -->
+  <main class="w-full flex-1 flex justify-center items-start p-0 m-0 border-none outline-none overflow-hidden">
+    <div id="prototype-frame" class="theme-warm-dark mode-desktop w-full min-h-screen flex flex-col overflow-hidden relative transition-all duration-300 border-none">
+
+      <!-- ============================================================= -->
+      <!-- UNIFIED, UNCONGESTED, COOL TOP NAVIGATION BAR                 -->
+      <!-- ============================================================= -->
+      <nav id="unified-top-navbar" class="h-16 px-4 sm:px-6 border-b border-inherit bg-inherit flex items-center justify-between gap-3 z-30 transition-colors">
+        
+        <!-- LEFT: Brand Monogram + Workspace Dropdown -->
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="flex items-center gap-2.5 cursor-pointer p-1 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition group">
+            <div id="app-logo-badge" class="w-8 h-8 rounded-xl brand-accent-bg flex items-center justify-center font-black text-xs text-black font-mono shadow-md">
+              DS
+            </div>
+            <div class="flex items-center gap-1.5 font-bold text-sm leading-none">
+              <span class="tracking-tight">Acme</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition"></i>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="hidden sm:block h-5 w-px bg-inherit opacity-20"></div>
+
+          <!-- PRIMARY NAV PILLS (Clean, punchy, uncrowded!) -->
+          <div class="hidden md:flex items-center bg-black/5 dark:bg-black/40 border border-inherit p-1 rounded-2xl gap-1">
+            <button onclick="switchView('board')" id="nav-btn-board" class="nav-pill active px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 brand-accent-text bg-amber-500/15 transition">
+              <i data-lucide="kanban" class="w-3.5 h-3.5"></i>
+              <span>Board</span>
+              <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20">14</span>
+            </button>
+
+            <button onclick="switchView('bento')" id="nav-btn-bento" class="nav-pill px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 opacity-70 hover:opacity-100 transition">
+              <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-sky-400"></i>
+              <span>Bento</span>
+            </button>
+
+            <button onclick="switchView('table')" id="nav-btn-table" class="nav-pill px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 opacity-70 hover:opacity-100 transition">
+              <i data-lucide="table" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Table</span>
+            </button>
+
+            <button onclick="switchView('chat')" id="nav-btn-chat" class="nav-pill px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 opacity-70 hover:opacity-100 transition">
+              <i data-lucide="message-square" class="w-3.5 h-3.5 text-rose-400"></i>
+              <span>Chat</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT: Hero Daylight/Dark Toggle, Search, Presence & Profile -->
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          
+          <!-- Quick Search capsule -->
+          <button onclick="openSearchModal()" class="hide-mobile hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/5 dark:bg-black/40 border border-inherit text-xs opacity-70 hover:opacity-100 transition">
+            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+            <span class="hidden lg:inline">Search issues...</span>
+            <kbd class="font-mono text-[10px] bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded">⌘K</kbd>
+          </button>
+
+          <!-- ========================================================= -->
+          <!-- THE DEDICATED HERO TOGGLE: ☀️ DAYLIGHT vs 🌙 WARM DARK    -->
+          <!-- ========================================================= -->
+          <div class="flex items-center bg-black/5 dark:bg-black/50 border border-inherit p-1 rounded-2xl shadow-inner gap-1">
+            
+            <!-- Daylight Clean Light Button -->
+            <button onclick="setSystemTheme('daylight')" id="toggle-btn-daylight" class="px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all text-slate-400 hover:text-slate-900" title="Daylight Clean Light (Cashmere White, High Contrast)">
+              <i data-lucide="sun" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span class="hidden sm:inline">Daylight</span>
+            </button>
+
+            <!-- HeroUI Warm Stone Dark Button -->
+            <button onclick="setSystemTheme('warm-dark')" id="toggle-btn-warm" class="px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm" title="HeroUI Warm Stone (Organic Zinc, Amber Glow)">
+              <i data-lucide="moon" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span class="hidden sm:inline">Warm Dark</span>
+            </button>
+
+          </div>
+
+          <!-- Teammate Presence Stack -->
+          <div class="hidden xl:flex items-center -space-x-1.5">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=face" class="w-7 h-7 rounded-full object-cover ring-2 ring-inherit" title="Sarah Connor">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face" class="w-7 h-7 rounded-full object-cover ring-2 ring-inherit" title="Alex Chen">
+            <div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 font-bold text-[10px] flex items-center justify-center ring-2 ring-inherit">+9</div>
+          </div>
+
+          <!-- + Invite Button -->
+          <button onclick="openInviteModal()" class="btn-brand-accent px-3.5 py-1.5 rounded-xl text-xs font-extrabold shadow-md flex items-center gap-1.5">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Invite</span>
+          </button>
+
+          <!-- User Avatar -->
+          <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-bold text-xs text-amber-400 cursor-pointer">
+            VM
+          </div>
+
+          <!-- Discreet Device Simulator (Desktop / Tablet / Mobile) -->
+          <div class="hidden lg:flex items-center bg-black/5 dark:bg-black/40 border border-inherit p-1 rounded-xl gap-0.5 ml-1">
+            <button onclick="setDevice('desktop')" id="dev-desktop" class="p-1 rounded-lg text-amber-400 bg-amber-500/15 transition" title="Desktop View">
+              <i data-lucide="monitor" class="w-3 h-3"></i>
+            </button>
+            <button onclick="setDevice('tablet')" id="dev-tablet" class="p-1 rounded-lg opacity-50 hover:opacity-100 transition" title="Tablet View">
+              <i data-lucide="tablet" class="w-3 h-3"></i>
+            </button>
+            <button onclick="setDevice('mobile')" id="dev-mobile" class="p-1 rounded-lg opacity-50 hover:opacity-100 transition" title="Mobile View">
+              <i data-lucide="smartphone" class="w-3 h-3"></i>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <!-- ============================================================= -->
+      <!-- BREADCRUMB & SPRINT CONTROLS BAR (Spacious & Clean)           -->
+      <!-- ============================================================= -->
+      <div class="px-6 py-2.5 border-b border-inherit bg-black/5 dark:bg-black/20 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2.5 font-semibold">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="active-view-title" class="font-bold text-sm tracking-tight">Sprint 42 Kanban — Responsive Full Width</span>
+          <span class="opacity-30">|</span>
+          <span class="opacity-70 text-xs">84 story points committed</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Filter Pills -->
+          <div class="flex items-center gap-1.5">
+            <button class="px-2.5 py-1 rounded-lg border border-inherit text-xs font-semibold opacity-70 hover:opacity-100 bg-black/5 dark:bg-white/5 transition">All Issues</button>
+            <button class="px-2.5 py-1 rounded-lg border border-inherit text-xs font-semibold opacity-70 hover:opacity-100 bg-black/5 dark:bg-white/5 transition">Only Mine</button>
+            <button class="px-2.5 py-1 rounded-lg border border-inherit text-xs font-bold text-rose-500 bg-rose-500/10 transition">Urgent</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- VIEW 1: FULL-WIDTH KANBAN BOARD                               -->
+      <!-- ============================================================= -->
+      <div id="view-board" class="view-panel flex-1 flex overflow-hidden">
+        
+        <div class="flex-1 overflow-x-auto overflow-y-hidden p-6 flex gap-5 transition-all">
+          
+          <!-- Column 1: Backlog -->
+          <div class="w-80 flex-shrink-0 flex flex-col saas-card p-4">
+            <div class="flex items-center justify-between pb-3 border-b border-inherit mb-3">
+              <div class="flex items-center gap-2 font-bold text-xs">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                <span class="text-sm font-bold">Backlog</span>
+                <span class="text-xs font-mono opacity-60 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">3</span>
+              </div>
+              <button class="opacity-50 hover:opacity-100"><i data-lucide="plus" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+              <!-- Task 1 -->
+              <div onclick="openSplitInspector('DES-101')" class="saas-card p-4 cursor-pointer group hover:scale-[1.01] transition">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-500/15 brand-accent-text border border-amber-500/20">DES-101</span>
+                  <span class="text-[11px] font-bold text-rose-500 bg-rose-500/10 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <i data-lucide="flame" class="w-3 h-3"></i> Urgent
+                  </span>
+                </div>
+                <h4 class="font-bold text-sm leading-snug group-hover:brand-accent-text transition line-clamp-2">
+                  Migrate styling engine to modern Tailwind CSS v4 tokens
+                </h4>
+                <p class="text-xs opacity-70 mt-1 line-clamp-2">
+                  Eliminate 30,000+ lines of raw inline styles, create consistent dark glassmorphic tokens, and enable container-responsive layouts.
+                </p>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-inherit text-xs opacity-70">
+                  <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1"><i data-lucide="paperclip" class="w-3.5 h-3.5"></i> 2</span>
+                    <span class="flex items-center gap-1"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> 5</span>
+                  </div>
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=face" class="w-6 h-6 rounded-full object-cover">
+                </div>
+              </div>
+
+              <!-- Task 2 -->
+              <div onclick="openSplitInspector('DES-102')" class="saas-card p-4 cursor-pointer group hover:scale-[1.01] transition">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 opacity-80">DES-102</span>
+                  <span class="text-[11px] font-bold text-amber-500 bg-amber-500/10 px-2.5 py-0.5 rounded-full">Medium</span>
+                </div>
+                <h4 class="font-bold text-sm leading-snug group-hover:brand-accent-text transition line-clamp-2">
+                  Configure Google SMTP pool with port 465 SSL for Render
+                </h4>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-inherit text-xs opacity-70">
+                  <span class="text-emerald-500 flex items-center gap-1 font-semibold"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Ready</span>
+                  <div class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-bold text-[10px] flex items-center justify-center">AC</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: In Progress -->
+          <div class="w-80 flex-shrink-0 flex flex-col saas-card p-4">
+            <div class="flex items-center justify-between pb-3 border-b border-inherit mb-3">
+              <div class="flex items-center gap-2 font-bold text-xs brand-accent-text">
+                <span class="w-2.5 h-2.5 rounded-full brand-accent-bg animate-pulse"></span>
+                <span class="text-sm font-bold">In Progress</span>
+                <span class="text-xs font-mono bg-amber-500/15 brand-accent-text px-2 py-0.5 rounded-full">2</span>
+              </div>
+              <button class="opacity-50 hover:opacity-100"><i data-lucide="plus" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+              <!-- Task 3 -->
+              <div onclick="openSplitInspector('DES-103')" class="saas-card p-4 cursor-pointer group hover:scale-[1.01] transition">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-500/15 brand-accent-text">DES-103</span>
+                  <span class="text-[11px] font-bold text-amber-500 bg-amber-500/10 px-2.5 py-0.5 rounded-full">High</span>
+                </div>
+                <h4 class="font-bold text-sm leading-snug group-hover:brand-accent-text transition line-clamp-2">
+                  Build responsive bottom dock navigation for mobile screens
+                </h4>
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                  <span class="text-[10px] bg-black/5 dark:bg-white/5 opacity-80 px-2 py-0.5 rounded-md font-semibold">Mobile</span>
+                  <span class="text-[10px] bg-black/5 dark:bg-white/5 opacity-80 px-2 py-0.5 rounded-md font-semibold">Touch UI</span>
+                </div>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-inherit text-xs opacity-70">
+                  <span class="text-xs opacity-60">Updated 4m ago</span>
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face" class="w-6 h-6 rounded-full object-cover">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: In Review -->
+          <div class="w-80 flex-shrink-0 flex flex-col saas-card p-4">
+            <div class="flex items-center justify-between pb-3 border-b border-inherit mb-3">
+              <div class="flex items-center gap-2 font-bold text-xs text-purple-400">
+                <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                <span class="text-sm font-bold">In Review</span>
+                <span class="text-xs font-mono bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded-full">1</span>
+              </div>
+              <button class="opacity-50 hover:opacity-100"><i data-lucide="plus" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+              <!-- Task 4 -->
+              <div onclick="openSplitInspector('DES-099')" class="saas-card p-4 cursor-pointer group hover:scale-[1.01] transition">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 opacity-80">DES-099</span>
+                  <span class="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">Normal</span>
+                </div>
+                <h4 class="font-bold text-sm leading-snug group-hover:brand-accent-text transition line-clamp-2">
+                  Sanitize user payload in auth controllers to prevent password hash leak
+                </h4>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-inherit text-xs opacity-70">
+                  <span class="text-emerald-500 flex items-center gap-1 font-semibold"><i data-lucide="check" class="w-3.5 h-3.5"></i> Passed Tests</span>
+                  <div class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-[10px] flex items-center justify-center">VM</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 4: Completed -->
+          <div class="w-80 flex-shrink-0 flex flex-col saas-card p-4 opacity-85">
+            <div class="flex items-center justify-between pb-3 border-b border-inherit mb-3">
+              <div class="flex items-center gap-2 font-bold text-xs text-emerald-500">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <span class="text-sm font-bold">Completed</span>
+                <span class="text-xs font-mono bg-emerald-500/15 text-emerald-500 px-2 py-0.5 rounded-full">4</span>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="saas-card p-4">
+                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500">DES-095</span>
+                <h4 class="font-bold text-sm line-through opacity-60 mt-1.5">
+                  Express 5 path-to-regexp asterisk crash fix
+                </h4>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SPLIT INSPECTOR PANEL -->
+        <div id="split-inspector" class="w-0 overflow-hidden saas-card border-l transition-all duration-300 flex flex-col">
+          <div class="p-4 border-b border-inherit flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span id="inspector-id" class="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-amber-500/15 brand-accent-text">DES-101</span>
+              <span class="text-xs opacity-60">Issue Inspector</span>
+            </div>
+            <button onclick="closeSplitInspector()" class="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div>
+              <h3 id="inspector-title" class="font-extrabold text-base leading-snug">Migrate styling engine to modern Tailwind CSS v4 tokens</h3>
+              <p class="text-xs opacity-70 mt-2 leading-relaxed">
+                Eliminate 30,000+ lines of raw inline styles, create consistent dark glassmorphic tokens, and enable container-responsive layouts.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="p-3.5 saas-card bg-black/5 dark:bg-white/5">
+                <div class="text-[10px] uppercase font-bold opacity-50">Assignee</div>
+                <div class="flex items-center gap-2 mt-1.5 font-bold">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=face" class="w-6 h-6 rounded-full object-cover">
+                  <span>Sarah Connor</span>
+                </div>
+              </div>
+              <div class="p-3.5 saas-card bg-black/5 dark:bg-white/5">
+                <div class="text-[10px] uppercase font-bold opacity-50">Priority</div>
+                <div class="flex items-center gap-1.5 mt-1.5 font-bold text-rose-500">
+                  <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+                  <span>Urgent Priority</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="text-xs font-bold mb-2 flex justify-between">
+                <span>Task Checklist</span>
+                <span class="font-mono brand-accent-text">2 of 3 Done</span>
+              </div>
+              <div class="w-full bg-black/10 dark:bg-white/10 h-2 rounded-full overflow-hidden mb-3">
+                <div class="brand-accent-bg h-full w-2/3 rounded-full"></div>
+              </div>
+              <div class="space-y-2 text-xs">
+                <label class="flex items-center gap-2.5 opacity-80 cursor-pointer">
+                  <input type="checkbox" checked class="rounded text-amber-500">
+                  <span class="line-through opacity-60">Audit and remove orphaned CSS</span>
+                </label>
+                <label class="flex items-center gap-2.5 opacity-80 cursor-pointer">
+                  <input type="checkbox" checked class="rounded text-amber-500">
+                  <span class="line-through opacity-60">Centralize auth parsing in auth.js</span>
+                </label>
+                <label class="flex items-center gap-2.5 opacity-80 cursor-pointer">
+                  <input type="checkbox" class="rounded text-amber-500">
+                  <span class="font-bold">Implement Radix accessible modals</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 border-t border-inherit flex items-center justify-end gap-2">
+            <button onclick="closeSplitInspector()" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold opacity-70 hover:opacity-100">Cancel</button>
+            <button onclick="triggerToast('Updated in Cloud Database!')" class="btn-brand-accent px-4 py-1.5 rounded-xl text-xs font-bold shadow-md">Update Issue</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- VIEW 2: BENTO HUB VIEW                                        -->
+      <!-- ============================================================= -->
+      <div id="view-bento" class="view-panel flex-1 overflow-y-auto p-6 hidden">
+        <div class="max-w-5xl mx-auto space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
+            <div class="saas-card md:col-span-2 p-6 rounded-3xl">
+              <span class="text-[10px] font-bold uppercase tracking-wider brand-accent-text">Velocity Engine</span>
+              <h3 class="text-xl font-bold mt-1">84 Story Points Shipped</h3>
+              <div class="h-36 flex items-end gap-3 pt-6">
+                <div class="flex-1 bg-black/10 dark:bg-white/5 rounded-xl h-[35%]"></div>
+                <div class="flex-1 bg-black/10 dark:bg-white/5 rounded-xl h-[55%]"></div>
+                <div class="flex-1 bg-black/10 dark:bg-white/5 rounded-xl h-[50%]"></div>
+                <div class="flex-1 bg-black/10 dark:bg-white/5 rounded-xl h-[75%]"></div>
+                <div class="flex-1 brand-accent-bg rounded-xl h-[95%] shadow-lg"></div>
+              </div>
+              <div class="flex justify-between text-xs opacity-60 mt-3 font-mono">
+                <span>Sprint 38</span><span>Sprint 39</span><span>Sprint 40</span><span>Sprint 41</span><span class="brand-accent-text font-bold">Sprint 42</span>
+              </div>
+            </div>
+
+            <div class="saas-card p-6 rounded-3xl flex flex-col justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Standup Streak</span>
+                <h3 class="text-xl font-bold mt-1">14-Day Streak</h3>
+                <p class="text-xs opacity-70 mt-1">100% participation with 0 unresolved blockers.</p>
+              </div>
+              <div class="grid grid-cols-7 gap-2 my-4">
+                <div class="h-7 rounded-lg bg-emerald-500/30"></div>
+                <div class="h-7 rounded-lg bg-emerald-500/60"></div>
+                <div class="h-7 rounded-lg bg-emerald-500/40"></div>
+                <div class="h-7 rounded-lg bg-emerald-500/80"></div>
+                <div class="h-7 rounded-lg bg-emerald-500"></div>
+                <div class="h-7 rounded-lg bg-emerald-500/30"></div>
+                <div class="h-7 rounded-lg bg-emerald-500/90"></div>
+              </div>
+              <button onclick="triggerToast('Standup Digest Dispatched via Gmail!')" class="w-full py-2.5 rounded-xl bg-black/5 dark:bg-white/10 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                <i data-lucide="mail" class="w-3.5 h-3.5"></i> Trigger Email Digest
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- VIEW 3: DAYLIGHT EXECUTIVE REGISTRY (Large Font Table)        -->
+      <!-- ============================================================= -->
+      <div id="view-table" class="view-panel flex-1 overflow-y-auto p-6 hidden">
+        <div class="max-w-5xl mx-auto space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-inherit">
+            <div>
+              <h2 class="text-2xl font-black tracking-tight">Executive Issue Registry</h2>
+              <p class="text-xs opacity-70 mt-0.5">High-clarity large typography view with instant status metrics.</p>
+            </div>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-black/5 dark:bg-white/5 border border-inherit">14 Active Items</span>
+          </div>
+
+          <div class="saas-card overflow-hidden">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-inherit bg-black/5 dark:bg-white/5 text-xs font-bold uppercase tracking-wider opacity-60">
+                  <th class="p-4">Key</th>
+                  <th class="p-4">Title</th>
+                  <th class="p-4">Status</th>
+                  <th class="p-4">Priority</th>
+                  <th class="p-4">Assignee</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-inherit text-base">
+                <tr class="hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer" onclick="openSplitInspector('DES-101')">
+                  <td class="p-4 font-mono font-bold text-xs brand-accent-text">DES-101</td>
+                  <td class="p-4 font-bold">Migrate styling engine to modern Tailwind CSS v4 tokens</td>
+                  <td class="p-4"><span class="px-3 py-1 rounded-full font-bold text-xs bg-amber-500/15 brand-accent-text">Backlog</span></td>
+                  <td class="p-4"><span class="px-3 py-1 rounded-full font-bold text-xs bg-rose-500/15 text-rose-500">Urgent</span></td>
+                  <td class="p-4">
+                    <div class="flex items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=face" class="w-7 h-7 rounded-full object-cover">
+                      <span class="text-sm font-semibold">Sarah Connor</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer" onclick="openSplitInspector('DES-102')">
+                  <td class="p-4 font-mono font-bold text-xs opacity-60">DES-102</td>
+                  <td class="p-4 font-bold">Configure Google SMTP pool with port 465 SSL for Render</td>
+                  <td class="p-4"><span class="px-3 py-1 rounded-full font-bold text-xs bg-emerald-500/15 text-emerald-500">Completed</span></td>
+                  <td class="p-4"><span class="px-3 py-1 rounded-full font-bold text-xs bg-amber-500/15 text-amber-500">Medium</span></td>
+                  <td class="p-4">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center">AC</div>
+                      <span class="text-sm font-semibold">Alex Chen</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- VIEW 4: TEAM CHAT STREAM                                      -->
+      <!-- ============================================================= -->
+      <div id="view-chat" class="view-panel flex-1 overflow-hidden p-6 hidden flex-col">
+        <div class="flex-1 saas-card p-5 flex flex-col overflow-hidden">
+          <div class="pb-3 border-b border-inherit flex items-center gap-2">
+            <i data-lucide="hash" class="w-4 h-4 brand-accent-text"></i>
+            <span class="font-bold text-sm">#engineering</span>
+            <span class="text-xs opacity-60">• Real-Time Socket.IO</span>
+          </div>
+          <div class="flex-1 overflow-y-auto py-4 space-y-4">
+            <div class="flex gap-3">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=face" class="w-8 h-8 rounded-full object-cover">
+              <div>
+                <span class="font-bold text-xs">Sarah Connor</span>
+                <p class="text-xs sm:text-sm mt-1 bg-black/5 dark:bg-white/5 p-3 rounded-2xl border border-inherit max-w-lg">
+                  The interface looks so much cleaner now without outer border lines or extra overlays! Clean, spacious, and responsive.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="pt-2">
+            <input type="text" placeholder="Message #engineering..." class="w-full bg-black/5 dark:bg-black/40 border border-inherit rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- RESPONSIVE MOBILE FLOATING DOCK (Appears on Mobile/Tablet)    -->
+      <!-- ============================================================= -->
+      <div class="show-mobile md:hidden fixed bottom-4 inset-x-4 z-40 flex justify-center pointer-events-none">
+        <div class="pointer-events-auto saas-card px-3 py-2 rounded-2xl shadow-2xl backdrop-blur-2xl flex items-center gap-2 border border-inherit">
+          <button onclick="switchView('board')" id="mob-btn-board" class="p-2.5 rounded-xl brand-accent-text bg-amber-500/15" title="Board">
+            <i data-lucide="kanban" class="w-5 h-5"></i>
+          </button>
+          <button onclick="switchView('bento')" id="mob-btn-bento" class="p-2.5 rounded-xl opacity-70 hover:opacity-100" title="Bento">
+            <i data-lucide="layout-grid" class="w-5 h-5 text-sky-400"></i>
+          </button>
+          <button onclick="switchView('table')" id="mob-btn-table" class="p-2.5 rounded-xl opacity-70 hover:opacity-100" title="Table">
+            <i data-lucide="table" class="w-5 h-5 text-emerald-400"></i>
+          </button>
+          <button onclick="switchView('chat')" id="mob-btn-chat" class="p-2.5 rounded-xl opacity-70 hover:opacity-100" title="Chat">
+            <i data-lucide="message-square" class="w-5 h-5 text-rose-400"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- ACCESSIBLE SHADCN INVITE DIALOG                                   -->
+  <!-- ================================================================= -->
+  <div id="invite-dialog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-200">
+    <div class="w-full max-w-md saas-card p-6 relative overflow-hidden transform scale-95 transition-transform duration-200 shadow-2xl">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h3 class="font-bold text-base">Invite Team Member</h3>
+          <p class="text-xs opacity-60 mt-0.5">Dispatched directly via Google Mail SMTP SSL.</p>
+        </div>
+        <button onclick="closeInviteModal()" class="p-1 rounded-lg opacity-60 hover:opacity-100">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSendInvite(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold opacity-80 mb-1.5">Gmail Address</label>
+          <input type="email" required placeholder="colleague@gmail.com" class="w-full bg-black/10 dark:bg-black/50 border border-inherit rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeInviteModal()" class="px-3.5 py-1.5 rounded-xl font-bold opacity-60 hover:opacity-100">Cancel</button>
+          <button type="submit" class="btn-brand-accent px-4 py-1.5 rounded-xl font-bold shadow-md flex items-center gap-1.5">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i> Send Invite
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SONNER TOAST STACK -->
+  <div id="toast-shelf" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ================================================================= -->
+  <!-- JAVASCRIPT CONTROLLER                                             -->
+  <!-- ================================================================= -->
+  <script>
+    lucide.createIcons();
+
+    // Dual Hero System Config
+    let currentSystemTheme = 'warm-dark'; // Default to Warm Dark
+    let currentView = 'board';
+
+    // 1. Switch Primary Themes (Daylight Light ☀️ vs Warm Stone Dark 🌙)
+    function setSystemTheme(theme) {
+      currentSystemTheme = theme;
+      const body = document.body;
+      const frame = document.getElementById('prototype-frame');
+      const btnDaylight = document.getElementById('toggle-btn-daylight');
+      const btnWarm = document.getElementById('toggle-btn-warm');
+      const logoBadge = document.getElementById('app-logo-badge');
+
+      body.classList.remove('theme-daylight-light', 'theme-warm-dark');
+      frame.classList.remove('theme-daylight-light', 'theme-warm-dark');
+
+      if (theme === 'daylight') {
+        body.classList.add('theme-daylight-light');
+        frame.classList.add('theme-daylight-light');
+        document.documentElement.classList.remove('dark');
+        
+        btnDaylight.className = 'px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-white text-indigo-700 shadow-sm border border-slate-200';
+        btnWarm.className = 'px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all text-slate-400 hover:text-slate-800';
+        logoBadge.className = 'w-8 h-8 rounded-xl bg-indigo-700 text-white flex items-center justify-center font-black text-xs font-mono shadow-md';
+
+        triggerToast("☀️ Daylight Mode: Clean Cashmere White & High Contrast 16px Font");
+      } else if (theme === 'warm-dark') {
+        body.classList.add('theme-warm-dark');
+        frame.classList.add('theme-warm-dark');
+        document.documentElement.classList.add('dark');
+
+        btnWarm.className = 'px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm';
+        btnDaylight.className = 'px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all text-slate-400 hover:text-white';
+        logoBadge.className = 'w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black text-xs font-mono shadow-md';
+
+        triggerToast("🌙 Warm Dark Mode: Organic Zinc & Amber Glow");
+      }
+    }
+
+    // 2. Switch Primary View (Board, Bento, Table, Chat)
+    function switchView(view) {
+      currentView = view;
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
+      const target = document.getElementById('view-' + view);
+      if (target) {
+        target.classList.remove('hidden');
+        if (view === 'chat') target.classList.add('flex');
+      }
+
+      // Update Desktop Nav Pills
+      document.querySelectorAll('.nav-pill').forEach(btn => {
+        btn.classList.remove('active', 'brand-accent-text', 'bg-amber-500/15', 'bg-indigo-500/15');
+        btn.classList.add('opacity-70');
+      });
+      const activeBtn = document.getElementById('nav-btn-' + view);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'brand-accent-text', 'bg-amber-500/15');
+        activeBtn.classList.remove('opacity-70');
+      }
+
+      // Update Mobile Dock Buttons
+      document.querySelectorAll('[id^="mob-btn-"]').forEach(btn => {
+        btn.classList.remove('brand-accent-text', 'bg-amber-500/15');
+        btn.classList.add('opacity-70');
+      });
+      const mobBtn = document.getElementById('mob-btn-' + view);
+      if (mobBtn) {
+        mobBtn.classList.add('brand-accent-text', 'bg-amber-500/15');
+        mobBtn.classList.remove('opacity-70');
+      }
+
+      // Update Title
+      const title = document.getElementById('active-view-title');
+      if (view === 'board') title.innerText = 'Sprint 42 Kanban — Responsive Full Width';
+      else if (view === 'bento') title.innerText = 'Bento Hub — Live Reactive Telemetry';
+      else if (view === 'table') title.innerText = 'Executive Issue Registry — Daylight 16px Font';
+      else if (view === 'chat') title.innerText = '#engineering — Real-Time Stream';
+    }
+
+    // 3. Device Simulator
+    function setDevice(device) {
+      const frame = document.getElementById('prototype-frame');
+      const btns = ['desktop', 'tablet', 'mobile'];
+      btns.forEach(b => {
+        const el = document.getElementById('dev-' + b);
+        if (el) {
+          el.className = 'p-1 rounded-lg opacity-50 hover:opacity-100 transition';
+        }
+      });
+
+      const activeBtn = document.getElementById('dev-' + device);
+      if (activeBtn) {
+        activeBtn.className = 'p-1 rounded-lg text-amber-400 bg-amber-500/15 transition';
+      }
+
+      frame.classList.remove('mode-desktop', 'mode-tablet', 'mode-mobile');
+      frame.classList.add('mode-' + device);
+    }
+
+    // 4. Split Inspector
+    function openSplitInspector(id) {
+      const inspector = document.getElementById('split-inspector');
+      document.getElementById('inspector-id').innerText = id;
+      inspector.style.width = '380px';
+    }
+
+    function closeSplitInspector() {
+      document.getElementById('split-inspector').style.width = '0px';
+    }
+
+    // 5. Modals
+    function openInviteModal() {
+      const dialog = document.getElementById('invite-dialog');
+      dialog.classList.remove('opacity-0', 'pointer-events-none');
+      dialog.querySelector('div').classList.remove('scale-95');
+      dialog.querySelector('div').classList.add('scale-100');
+    }
+
+    function closeInviteModal() {
+      const dialog = document.getElementById('invite-dialog');
+      dialog.classList.add('opacity-0', 'pointer-events-none');
+      dialog.querySelector('div').classList.remove('scale-100');
+      dialog.querySelector('div').classList.add('scale-95');
+    }
+
+    function handleSendInvite(e) {
+      e.preventDefault();
+      closeInviteModal();
+      triggerToast("Invite sent via Gmail SMTP SSL!");
+    }
+
+    function openSearchModal() {
+      triggerToast("Quick Search activated (⌘K)");
+    }
+
+    // 6. Sonner Toast
+    function triggerToast(message) {
+      const shelf = document.getElementById('toast-shelf');
+      const toast = document.createElement('div');
+      toast.className = 'saas-card text-xs font-bold px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 transform translate-y-4 opacity-0 transition-all duration-200 pointer-events-auto backdrop-blur-xl border border-inherit';
+      toast.innerHTML = `
+        <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+        </div>
+        <span>${message}</span>
+      `;
+      shelf.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => toast.classList.remove('translate-y-4', 'opacity-0'), 10);
+      setTimeout(() => {
+        toast.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
+    }
+
+    // Initialize Default State (HeroUI Warm Dark)
+    setSystemTheme('warm-dark');
+  </script>
+</body>
+</html>

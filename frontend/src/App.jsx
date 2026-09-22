@@ -56,15 +56,32 @@ function App() {
             position="top-right"
             toastOptions={{
               style: {
-                background: "#0a0c14",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "12px",
-                fontSize: "14px",
-                fontFamily: "Figtree, sans-serif",
+                background: "var(--bg-surface, #ffffff)",
+                color: "var(--text-heading, #0f172a)",
+                border: "1px solid var(--border, rgba(15, 23, 42, 0.12))",
+                borderRadius: "16px",
+                fontSize: "13px",
+                fontWeight: "600",
+                boxShadow: "0 14px 36px rgba(0,0,0,0.18)",
+                padding: "12px 16px",
               },
-              success: { iconTheme: { primary: "#34d399", secondary: "#fff" } },
-              error:   { iconTheme: { primary: "#f87171", secondary: "#fff" } },
+              success: {
+                iconTheme: { primary: "#10b981", secondary: "#ffffff" },
+                style: {
+                  background: "var(--bg-surface, #ffffff)",
+                  color: "var(--text-heading, #0f172a)",
+                  border: "1px solid rgba(16, 185, 129, 0.35)",
+                },
+              },
+              error: {
+                iconTheme: { primary: "#ef4444", secondary: "#ffffff" },
+                style: {
+                  background: "var(--bg-surface, #ffffff)",
+                  color: "var(--text-heading, #0f172a)",
+                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                  boxShadow: "0 14px 36px rgba(239, 68, 68, 0.12), 0 4px 14px rgba(0,0,0,0.1)",
+                },
+              },
             }}
           />
 
@@ -93,8 +110,12 @@ function App() {
 
                 {/* App */}
                 <Route path="/dashboard"             element={<ErrorBoundary><Dashboard/></ErrorBoundary>} />
+                <Route path="/board"                 element={<ErrorBoundary><Board /></ErrorBoundary>} />
+                <Route path="/boards"                element={<ErrorBoundary><Board /></ErrorBoundary>} />
+                <Route path="/projects"              element={<ErrorBoundary><Projects /></ErrorBoundary>} />
                 <Route path="/projects/:workspaceId" element={<ErrorBoundary><Projects /></ErrorBoundary>} />
                 <Route path="/boards/:projectId"     element={<ErrorBoundary><Board /></ErrorBoundary>} />
+                <Route path="/channels"              element={<ErrorBoundary><ChannelView /></ErrorBoundary>} />
                 <Route path="/channels/:channelId"   element={<ErrorBoundary><ChannelView /></ErrorBoundary>} />
                 <Route path="/dm/:recipientId"       element={<ErrorBoundary><DMView /></ErrorBoundary>} />
                 <Route path="/analytics/:workspaceId" element={<ErrorBoundary><Analytics /></ErrorBoundary>} />

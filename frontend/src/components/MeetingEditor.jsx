@@ -7,9 +7,15 @@ import API from "../services/api";
 
 /* ── Design tokens ─────────────────────────────────────────── */
 const C = {
-  bgBase: "#0F172A", bgCard: "#1E293B", bgElevated: "#253448",
-  border: "#334155", textPrimary: "#F1F5F9", textSecondary: "#94A3B8",
-  textMuted: "#64748B", accent: "#6366F1", accentHover: "#4F46E5",
+  bgBase: "rgb(var(--bg-canvas))",
+  bgCard: "rgb(var(--bg-surface))",
+  bgElevated: "rgb(var(--bg-surface-elevated))",
+  border: "rgb(var(--border))",
+  textPrimary: "rgb(var(--text-heading))",
+  textSecondary: "rgb(var(--text-body))",
+  textMuted: "rgb(var(--text-muted))",
+  accent: "rgb(var(--accent))",
+  accentHover: "rgb(var(--accent-hover))",
 };
 
 /* ── Toolbar button ────────────────────────────────────────── */
@@ -19,13 +25,13 @@ const ToolbarBtn = ({ active, onClick, children, title }) => (
     onClick={onClick}
     title={title}
     style={{
-      background: active ? "rgba(99,102,241,0.15)" : "transparent",
-      color: active ? "#818cf8" : C.textSecondary,
-      border: "none", borderRadius: 6, padding: "4px 8px",
+      background: active ? "rgb(var(--accent) / 0.15)" : "transparent",
+      color: active ? "rgb(var(--accent))" : C.textSecondary,
+      border: "none", borderRadius: 8, padding: "5px 9px",
       cursor: "pointer", fontSize: 13, fontWeight: 600,
       transition: "all 0.15s", display: "flex", alignItems: "center",
     }}
-    onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+    onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "rgb(var(--border) / 0.4)"; }}
     onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
   >
     {children}
@@ -171,7 +177,6 @@ const MeetingEditor = forwardRef(function MeetingEditor({ content, onChange, wor
       Mention.configure({
         HTMLAttributes: {
           class: "mention-chip",
-          style: `background: rgba(99,102,241,0.15); color: #818cf8; border-radius: 6px; padding: 1px 6px; font-weight: 600; font-size: 12px; cursor: pointer;`,
         },
         suggestion: createMentionSuggestion(fetchAllTasks),
       }),
@@ -194,8 +199,8 @@ const MeetingEditor = forwardRef(function MeetingEditor({ content, onChange, wor
     <div style={{ border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", background: C.bgBase }}>
       {/* ── Toolbar ── */}
       <div style={{
-        display: "flex", gap: 2, padding: "6px 10px",
-        borderBottom: `1px solid ${C.border}`, background: "rgba(255,255,255,0.02)",
+        display: "flex", gap: 2, padding: "8px 12px",
+        borderBottom: `1px solid ${C.border}`, background: C.bgCard,
       }}>
         <ToolbarBtn
           active={editor.isActive("bold")}
@@ -212,7 +217,7 @@ const MeetingEditor = forwardRef(function MeetingEditor({ content, onChange, wor
           onClick={() => editor.chain().focus().toggleStrike().run()}
           title="Strikethrough"
         ><s>S</s></ToolbarBtn>
-        <div style={{ width: 1, background: C.border, margin: "2px 4px" }} />
+        <div style={{ width: 1, background: C.border, margin: "2px 6px" }} />
         <ToolbarBtn
           active={editor.isActive("heading", { level: 2 })}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -236,7 +241,7 @@ const MeetingEditor = forwardRef(function MeetingEditor({ content, onChange, wor
       </div>
 
       {/* ── Editor ── */}
-      <div style={{ padding: "12px 16px", minHeight: 180 }}>
+      <div style={{ padding: "14px 18px", minHeight: 180 }}>
         <EditorContent editor={editor} />
       </div>
 
@@ -244,7 +249,7 @@ const MeetingEditor = forwardRef(function MeetingEditor({ content, onChange, wor
       <style>{`
         .tiptap {
           outline: none;
-          font-family: 'Inter', -apple-system, sans-serif;
+          font-family: inherit;
           font-size: 14px;
           color: ${C.textPrimary};
           line-height: 1.7;
@@ -263,9 +268,9 @@ const MeetingEditor = forwardRef(function MeetingEditor({ content, onChange, wor
           color: ${C.textSecondary};
         }
         .tiptap code {
-          background: rgba(99,102,241,0.1);
-          border-radius: 4px; padding: 1px 4px;
-          font-size: 13px; color: #c084fc;
+          background: rgb(var(--accent) / 0.12);
+          border-radius: 4px; padding: 1px 5px;
+          font-size: 13px; color: ${C.accent};
         }
         .tiptap .is-editor-empty:first-child::before {
           content: attr(data-placeholder);
@@ -275,10 +280,10 @@ const MeetingEditor = forwardRef(function MeetingEditor({ content, onChange, wor
           height: 0;
         }
         .mention-chip {
-          background: rgba(99,102,241,0.15);
-          color: #818cf8;
+          background: rgb(var(--accent) / 0.15);
+          color: ${C.accent};
           border-radius: 6px;
-          padding: 1px 6px;
+          padding: 2px 6px;
           font-weight: 600;
           font-size: 12px;
           cursor: pointer;

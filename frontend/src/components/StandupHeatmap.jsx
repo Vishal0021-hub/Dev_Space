@@ -2,14 +2,14 @@ import { useState, useEffect, useMemo } from "react";
 import API from "../services/api";
 
 const C = {
-  bgBase: "#0F172A",
-  bgCard: "#1E293B",
-  border: "#334155",
-  borderLight: "rgba(255, 255, 255, 0.08)",
-  textPrimary: "#F1F5F9",
-  textSecondary: "#94A3B8",
-  textMuted: "#64748B",
-  accent: "#6366F1",
+  bgBase: "rgb(var(--bg-canvas))",
+  bgCard: "rgb(var(--bg-surface))",
+  border: "rgb(var(--border))",
+  borderLight: "rgb(var(--border) / 0.5)",
+  textPrimary: "rgb(var(--text-heading))",
+  textSecondary: "rgb(var(--text-body))",
+  textMuted: "rgb(var(--text-muted))",
+  accent: "rgb(var(--accent))",
   success: "#10B981",
   warning: "#F59E0B",
   danger: "#EF4444",
